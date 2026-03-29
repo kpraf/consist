@@ -64,7 +64,6 @@
     --primary-glow: rgba(252, 76, 2, 0.25);
     --primary-glow-strong: rgba(252, 76, 2, 0.4);
     --surface-high: #1d1d37;
-    /* Safe area insets for notched phones (iPhone 16 Pro Max etc.) */
     --sat: env(safe-area-inset-top, 0px);
     --sab: env(safe-area-inset-bottom, 0px);
     --sal: env(safe-area-inset-left, 0px);
@@ -86,14 +85,11 @@
     overflow-x: hidden;
   }
 
-  /* ── Scrollbar ── */
   ::-webkit-scrollbar { width: 0; }
 
-  /* ── Screen transitions ── */
   .screen { display: none; opacity: 0; transform: translateY(8px); transition: opacity 0.25s ease, transform 0.25s ease; }
   .screen.active { display: block; opacity: 1; transform: translateY(0); }
 
-  /* ── Habit check animation ── */
   @keyframes ring-fill {
     0%   { transform: scale(0.7); opacity: 0; }
     60%  { transform: scale(1.25); }
@@ -116,17 +112,14 @@
     pointer-events: none; z-index: 9999;
   }
 
-  /* ── Progress bar glow ── */
   .progress-glow { box-shadow: 0 0 12px var(--primary-glow-strong); }
 
-  /* ── FAB pulse ── */
   @keyframes fab-pulse {
     0%, 100% { box-shadow: 0 0 0 0 var(--primary-glow); }
     50%       { box-shadow: 0 0 0 10px transparent; }
   }
   .fab { animation: fab-pulse 2.5s ease-in-out infinite; }
 
-  /* ── Modal ── */
   .modal-overlay {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
@@ -139,34 +132,25 @@
     max-height: 90dvh; overflow-y: auto;
     transform: translateY(100%);
     transition: transform 0.35s cubic-bezier(.22,.61,.36,1);
-    /* Safe area bottom padding inside sheet */
-    padding-bottom: calc(16px + var(--sab));
+    padding-bottom: 24px;
   }
   .modal-overlay.open .modal-sheet { transform: translateY(0); }
 
-  /* ── Stat bar animation ── */
-  @keyframes bar-grow {
-    from { width: 0; }
-  }
+  @keyframes bar-grow { from { width: 0; } }
   .stat-bar { animation: bar-grow 0.8s cubic-bezier(.22,.61,.36,1) both; }
 
-  /* ── Streak badge ── */
   .streak-glow { text-shadow: 0 0 30px var(--primary-glow-strong); }
 
-  /* ── Nav active dot ── */
   .nav-dot {
     width: 4px; height: 4px; border-radius: 50%;
     background: var(--primary); margin: 0 auto;
   }
 
-  /* ── Input focus ── */
   input:focus { outline: 1px solid var(--primary); }
 
-  /* ── Habit item done state ── */
   .habit-done .habit-name { opacity: 0.45; text-decoration: line-through; }
   .habit-done .habit-sub  { opacity: 0.35; }
 
-  /* ── Weekly bar hover tooltip ── */
   .bar-group:hover .bar-tip { opacity: 1 !important; }
 
   @keyframes slide-up {
@@ -181,42 +165,106 @@
   .stagger > *:nth-child(5) { animation-delay: 0.25s; }
   .stagger > *:nth-child(6) { animation-delay: 0.30s; }
 
-  /* ── iOS Safe area header ── */
   #topbar {
     padding-top: calc(1rem + var(--sat));
   }
 
-  /* ── Screens: push content below topbar (which is taller on notch phones) ── */
   .screen {
     padding-top: calc(80px + var(--sat));
   }
 
-  /* ── Bottom nav: respect home indicator ── */
+  /* ── Bottom nav: NO safe-area padding ── */
   #bottom-nav {
-    padding-bottom: calc(1.25rem + var(--sab));
+    padding-bottom: 1.25rem;
   }
 
-  /* FAB bottom is set via JS after DOM ready to guarantee safe-area calc works */
-
-  /* ── Confirm dialog ── */
   .confirm-overlay {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
     z-index: 200; align-items: center; justify-content: center;
   }
   .confirm-overlay.open { display: flex; }
+
+  /* ── Swipe-to-delete ── */
+  .habit-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.75rem;
+  }
+  .habit-delete-bg {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 80px;
+    background: #ff716c22;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255,113,108,0.2);
+    transition: background 0.2s;
+  }
+  .habit-delete-bg.active-delete { background: #ff716c33; }
+  .habit-card {
+    position: relative;
+    z-index: 1;
+    transition: transform 0.2s cubic-bezier(.22,.61,.36,1);
+    touch-action: pan-y;
+    background: #1d1d37;
+    border-radius: 0.75rem;
+  }
+  .habit-card.swiped { transform: translateX(-80px); }
+
+  /* ── Name input edit ── */
+  .name-input-edit {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #e5e3ff;
+    font-family: 'Lexend', sans-serif;
+    font-weight: 600;
+    font-size: 0.875rem;
+    width: 100%;
+    padding: 2px 4px;
+    border-bottom: 1px solid var(--primary);
+  }
+
+  /* ── Reminder time picker ── */
+  input[type="time"] {
+    background: #111127;
+    border: 1px solid #46465c;
+    color: #e5e3ff;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+  }
+  input[type="time"]:focus { outline: 1px solid var(--primary); }
+
+  /* ── Toggle switch ── */
+  .toggle-switch {
+    width: 44px; height: 24px; border-radius: 12px;
+    position: relative; cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle-switch .knob {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #000;
+    position: absolute; top: 2px;
+    transition: left 0.2s;
+  }
+  .toggle-switch.on { background: var(--primary); }
+  .toggle-switch.on .knob { left: 22px; }
+  .toggle-switch.off { background: #46465c; }
+  .toggle-switch.off .knob { left: 2px; }
 </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════════════
-     TOP APP BAR
-════════════════════════════════════════ -->
+<!-- TOP APP BAR -->
 <header id="topbar" class="fixed top-0 w-full z-50 flex items-center justify-between px-6 pb-4 bg-[#0c0c1f]/70 backdrop-blur-xl" style="border-bottom:1px solid rgba(255,255,255,0.04)">
   <div class="flex items-center gap-3">
     <div class="w-9 h-9 rounded-full overflow-hidden border-2 flex-shrink-0" style="border-color:var(--primary)">
       <div class="w-full h-full bg-gradient-to-br from-orange-500 to-red-700 flex items-center justify-center">
-        <span class="font-headline font-black text-black text-sm">K</span>
+        <span class="font-headline font-black text-black text-sm" id="avatar-initial">K</span>
       </div>
     </div>
     <div>
@@ -231,12 +279,9 @@
 </header>
 
 
-<!-- ════════════════════════════════════════
-     SCREEN: TODAY
-════════════════════════════════════════ -->
+<!-- SCREEN: TODAY -->
 <main id="screen-today" class="screen active pb-[90px] px-5 max-w-2xl mx-auto">
 
-  <!-- Hero Progress Card -->
   <section class="mt-4 mb-6">
     <div class="flex items-center justify-between mb-2">
       <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">Momentum Status</p>
@@ -253,7 +298,6 @@
           <span class="font-headline font-bold text-2xl text-on-surface-variant ml-1">/ <span id="total-count">0</span></span>
           <p class="text-sm text-on-surface-variant mt-1">habits done today</p>
         </div>
-        <!-- SVG Ring -->
         <div class="w-16 h-16 flex-shrink-0 relative">
           <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
             <circle cx="18" cy="18" r="15.9" fill="none" stroke="#23233f" stroke-width="3"/>
@@ -270,16 +314,13 @@
     </div>
   </section>
 
-  <!-- Habits List -->
   <section>
     <div class="flex justify-between items-center mb-4">
       <h3 class="font-headline font-bold text-xl tracking-tight">Active Disciplines</h3>
       <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Today</span>
     </div>
 
-    <div class="flex flex-col gap-3 stagger" id="habits-list">
-      <!-- Injected by JS -->
-    </div>
+    <div class="flex flex-col gap-3 stagger" id="habits-list"></div>
 
     <div id="empty-state" class="hidden text-center py-12">
       <span class="material-symbols-outlined text-5xl mb-3 block" style="color:#46465c">add_task</span>
@@ -288,7 +329,6 @@
     </div>
   </section>
 
-  <!-- Motivational Card -->
   <div class="mt-6 rounded-xl p-5" style="background:#111127; border:1px solid rgba(255,255,255,0.05)">
     <span class="text-[10px] font-bold uppercase tracking-widest mb-2 block" style="color:var(--primary)">Daily Fuel</span>
     <p class="font-headline font-medium text-base text-on-surface italic leading-relaxed">"Consistency is the only currency that matters in the long game."</p>
@@ -300,12 +340,8 @@
 </main>
 
 
-<!-- ════════════════════════════════════════
-     SCREEN: STATS
-════════════════════════════════════════ -->
+<!-- SCREEN: STATS -->
 <main id="screen-stats" class="screen pb-[90px] px-5 max-w-4xl mx-auto">
-
-  <!-- Streak Hero -->
   <section class="mt-4 mb-6 grid grid-cols-2 gap-4">
     <div class="rounded-xl p-6 flex flex-col justify-between relative overflow-hidden" style="background:#1d1d37; min-height:140px">
       <div class="absolute -right-6 -bottom-6 w-32 h-32 rounded-full pointer-events-none" style="background:radial-gradient(circle, rgba(252,76,2,0.15) 0%, transparent 70%)"></div>
@@ -326,28 +362,21 @@
     </div>
   </section>
 
-  <!-- Weekly Activity Graph -->
   <section class="mb-6">
     <div class="flex justify-between items-end mb-3">
       <h2 class="font-headline font-bold text-xl tracking-tight">Weekly Activity</h2>
       <span class="text-[10px] text-on-surface-variant" id="week-range"></span>
     </div>
     <div class="rounded-xl p-6" style="background:#111127">
-      <div class="flex items-end justify-between h-40 gap-1.5" id="week-bars">
-        <!-- Injected by JS -->
-      </div>
+      <div class="flex items-end justify-between h-40 gap-1.5" id="week-bars"></div>
     </div>
   </section>
 
-  <!-- Per-Habit Breakdown -->
   <section class="mb-6">
     <h2 class="font-headline font-bold text-xl tracking-tight mb-4">Per-Habit Breakdown</h2>
-    <div class="rounded-xl p-5 flex flex-col gap-4" style="background:#1d1d37" id="breakdown-list">
-      <!-- Injected by JS -->
-    </div>
+    <div class="rounded-xl p-5 flex flex-col gap-4" style="background:#1d1d37" id="breakdown-list"></div>
   </section>
 
-  <!-- Metrics Row -->
   <div class="grid grid-cols-2 gap-3 mb-6">
     <div class="rounded-xl p-5 text-center" style="background:#111127">
       <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1 font-bold">Today's Done</p>
@@ -369,9 +398,7 @@
 </main>
 
 
-<!-- ════════════════════════════════════════
-     SCREEN: SETTINGS
-════════════════════════════════════════ -->
+<!-- SCREEN: SETTINGS -->
 <main id="screen-settings" class="screen pb-[90px] px-5 max-w-2xl mx-auto">
   <div class="mt-4 mb-6">
     <h2 class="font-headline font-bold text-2xl tracking-tight mb-1">Settings</h2>
@@ -379,44 +406,62 @@
   </div>
 
   <div class="flex flex-col gap-3">
-    <div class="rounded-xl p-5 flex items-center justify-between" style="background:#1d1d37">
-      <div class="flex items-center gap-3">
-        <span class="material-symbols-outlined" style="color:var(--primary)">person</span>
-        <div>
-          <p class="font-headline font-semibold text-sm">Name</p>
-          <p class="text-xs text-on-surface-variant">Kester</p>
-        </div>
-      </div>
-      <span class="material-symbols-outlined text-on-surface-variant text-sm">edit</span>
-    </div>
 
-    <div class="rounded-xl p-5 flex items-center justify-between" style="background:#1d1d37">
-      <div class="flex items-center gap-3">
-        <span class="material-symbols-outlined" style="color:var(--primary)">notifications</span>
-        <div>
-          <p class="font-headline font-semibold text-sm">Daily Reminder</p>
-          <p class="text-xs text-on-surface-variant">9:00 AM</p>
+    <!-- Name — WORKING -->
+    <div class="rounded-xl p-5" style="background:#1d1d37">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+          <span class="material-symbols-outlined flex-shrink-0" style="color:var(--primary)">person</span>
+          <div class="flex-1 min-w-0">
+            <p class="font-headline font-semibold text-sm mb-1">Name</p>
+            <input id="name-input" type="text" placeholder="Enter your name"
+              class="w-full text-xs font-body rounded-lg px-2 py-1.5 text-on-surface placeholder:text-outline transition-all"
+              style="background:#111127;border:1px solid #46465c"
+              oninput="updateName(this.value)"
+              onblur="saveName(this.value)"/>
+          </div>
         </div>
-      </div>
-      <div class="w-11 h-6 rounded-full relative cursor-pointer" style="background:var(--primary)">
-        <div class="w-5 h-5 bg-black rounded-full absolute right-0.5 top-0.5"></div>
+        <span class="material-symbols-outlined text-on-surface-variant text-sm ml-3 flex-shrink-0">edit</span>
       </div>
     </div>
 
+    <!-- Daily Reminder — WORKING -->
+    <div class="rounded-xl p-5" style="background:#1d1d37">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined" style="color:var(--primary)">notifications</span>
+          <div>
+            <p class="font-headline font-semibold text-sm">Daily Reminder</p>
+            <p class="text-xs text-on-surface-variant" id="reminder-status-text">Tap to enable</p>
+          </div>
+        </div>
+        <div class="toggle-switch off" id="reminder-toggle" onclick="toggleReminder()">
+          <div class="knob"></div>
+        </div>
+      </div>
+      <div id="reminder-time-row" class="hidden flex items-center gap-3 pt-3" style="border-top:1px solid rgba(255,255,255,0.06)">
+        <span class="text-xs text-on-surface-variant">Remind me at</span>
+        <input type="time" id="reminder-time" value="09:00" onchange="saveReminderTime(this.value)"/>
+        <button onclick="testReminder()" class="ml-auto text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg active:scale-90 transition-transform" style="background:rgba(252,76,2,0.12);color:var(--primary);border:1px solid rgba(252,76,2,0.2)">Test</button>
+      </div>
+      <p id="reminder-note" class="hidden text-[10px] text-on-surface-variant mt-2 leading-relaxed">⚠️ Notifications require browser permission. On iOS Safari, add this page to your Home Screen first, then reload.</p>
+    </div>
+
+    <!-- Completion Sound — WORKING -->
     <div class="rounded-xl p-5 flex items-center justify-between" style="background:#1d1d37">
       <div class="flex items-center gap-3">
         <span class="material-symbols-outlined" style="color:var(--primary)">volume_up</span>
         <div>
           <p class="font-headline font-semibold text-sm">Completion Sound</p>
-          <p class="text-xs text-on-surface-variant">Enabled</p>
+          <p class="text-xs text-on-surface-variant" id="sound-status-text">Enabled</p>
         </div>
       </div>
-      <div class="w-11 h-6 rounded-full relative cursor-pointer" style="background:var(--primary)">
-        <div class="w-5 h-5 bg-black rounded-full absolute right-0.5 top-0.5"></div>
+      <div class="toggle-switch on" id="sound-toggle" onclick="toggleSound()">
+        <div class="knob"></div>
       </div>
     </div>
 
-    <!-- Reset All Data — WORKING -->
+    <!-- Reset All Data -->
     <button onclick="confirmReset()" class="w-full rounded-xl p-5 flex items-center justify-between active:scale-95 transition-transform text-left" style="background:#1d1d37">
       <div class="flex items-center gap-3">
         <span class="material-symbols-outlined" style="color:#ff716c">delete_sweep</span>
@@ -430,15 +475,13 @@
   </div>
 
   <div class="mt-8 text-center">
-    <p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Kester's Habit Tracker • PWA v1.0</p>
+    <p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Kester's Habit Tracker • PWA v1.1</p>
     <p class="text-[10px] text-on-surface-variant mt-1">All data stored locally. No login required.</p>
   </div>
 </main>
 
 
-<!-- ════════════════════════════════════════
-     BOTTOM NAV
-════════════════════════════════════════ -->
+<!-- BOTTOM NAV -->
 <nav id="bottom-nav" class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pt-3" style="background:rgba(29,29,55,0.85);backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.07)">
   <button class="nav-btn flex flex-col items-center gap-1 transition-all active:scale-90" data-screen="today" onclick="switchScreen('today')">
     <span class="material-symbols-outlined filled text-2xl nav-icon" style="color:var(--primary)" id="nav-icon-today">check_circle</span>
@@ -460,20 +503,15 @@
 </nav>
 
 
-<!-- ════════════════════════════════════════
-     FAB — Add Habit (positioned via CSS with safe area)
-════════════════════════════════════════ -->
-<button id="fab" class="fab fixed right-5 w-14 h-14 rounded-xl flex items-center justify-center z-40 active:scale-90 transition-transform" style="background:var(--primary);bottom:calc(90px + env(safe-area-inset-bottom, 0px))" onclick="openModal()">
+<!-- FAB -->
+<button id="fab" class="fab fixed right-5 w-14 h-14 rounded-xl flex items-center justify-center z-40 active:scale-90 transition-transform" style="background:var(--primary);bottom:calc(90px + 8px)" onclick="openModal()">
   <span class="material-symbols-outlined text-3xl font-black text-black">add</span>
 </button>
 
 
-<!-- ════════════════════════════════════════
-     ADD HABIT MODAL
-════════════════════════════════════════ -->
+<!-- ADD HABIT MODAL -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModalOnBackdrop(event)">
   <div class="modal-sheet" id="modal-sheet">
-    <!-- Header with X button instead of drag handle -->
     <div class="flex items-center justify-between px-6 pt-5 pb-2">
       <div>
         <h2 class="font-headline font-bold text-2xl tracking-tight">New Habit</h2>
@@ -485,7 +523,6 @@
     </div>
 
     <div class="px-6 pb-4 flex flex-col gap-7">
-      <!-- Name -->
       <div>
         <label class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold block mb-2">Habit Name</label>
         <input id="habit-name-input" type="text" placeholder="e.g. Deep Work Session"
@@ -493,19 +530,16 @@
           style="background:#111127;border:1px solid #46465c"/>
       </div>
 
-      <!-- Icon Picker -->
       <div>
         <label class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold block mb-3">Icon</label>
         <div class="grid grid-cols-5 gap-3" id="icon-grid"></div>
       </div>
 
-      <!-- Color Swatches -->
       <div>
         <label class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold block mb-3">Color</label>
         <div class="flex flex-wrap gap-3" id="color-grid"></div>
       </div>
 
-      <!-- Frequency -->
       <div>
         <label class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold block mb-3">Frequency</label>
         <div class="flex rounded-xl overflow-hidden p-1 gap-1" style="background:#111127">
@@ -514,7 +548,6 @@
           <button class="flex-1 py-2.5 rounded-lg text-xs font-bold text-on-surface-variant transition-all freq-btn" data-freq="custom" onclick="selectFreq(this)">Custom</button>
         </div>
 
-        <!-- Custom day picker — shown only when Custom is selected -->
         <div id="custom-day-picker" class="hidden mt-4">
           <p class="text-[10px] text-on-surface-variant font-bold uppercase tracking-widest mb-3">Select days</p>
           <div class="flex gap-2 justify-between" id="day-picker-row"></div>
@@ -522,7 +555,6 @@
         </div>
       </div>
 
-      <!-- CTA -->
       <button class="w-full py-5 rounded-xl font-headline font-bold text-lg uppercase tracking-tight active:scale-95 transition-transform" style="background:var(--primary);color:#000;box-shadow:0 12px 32px -6px rgba(252,76,2,0.4)" onclick="addHabit()">
         Start Habit
       </button>
@@ -531,9 +563,7 @@
 </div>
 
 
-<!-- ════════════════════════════════════════
-     CONFIRM RESET DIALOG
-════════════════════════════════════════ -->
+<!-- CONFIRM RESET DIALOG -->
 <div class="confirm-overlay" id="confirm-overlay">
   <div class="rounded-2xl p-6 mx-5 w-full max-w-sm" style="background:#1d1d37;border:1px solid rgba(255,255,255,0.08)">
     <div class="flex items-center gap-3 mb-4">
@@ -547,20 +577,33 @@
     </div>
     <p class="text-sm text-on-surface-variant mb-6 leading-relaxed">All your habits, streaks, and history will be permanently deleted from this device.</p>
     <div class="flex gap-3">
-      <button onclick="closeConfirm()" class="flex-1 py-3 rounded-xl font-headline font-bold text-sm active:scale-95 transition-transform" style="background:#23233f;color:#e5e3ff">
-        Cancel
-      </button>
-      <button onclick="resetAllData()" class="flex-1 py-3 rounded-xl font-headline font-bold text-sm active:scale-95 transition-transform" style="background:#ff716c;color:#000">
-        Delete All
-      </button>
+      <button onclick="closeConfirm()" class="flex-1 py-3 rounded-xl font-headline font-bold text-sm active:scale-95 transition-transform" style="background:#23233f;color:#e5e3ff">Cancel</button>
+      <button onclick="resetAllData()" class="flex-1 py-3 rounded-xl font-headline font-bold text-sm active:scale-95 transition-transform" style="background:#ff716c;color:#000">Delete All</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE HABIT DIALOG -->
+<div class="confirm-overlay" id="delete-habit-overlay">
+  <div class="rounded-2xl p-6 mx-5 w-full max-w-sm" style="background:#1d1d37;border:1px solid rgba(255,255,255,0.08)">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(255,113,108,0.15)">
+        <span class="material-symbols-outlined filled" style="color:#ff716c">delete</span>
+      </div>
+      <div>
+        <h3 class="font-headline font-bold text-lg leading-tight">Delete Habit?</h3>
+        <p class="text-xs text-on-surface-variant mt-0.5" id="delete-habit-name-display">This cannot be undone.</p>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeDeleteHabit()" class="flex-1 py-3 rounded-xl font-headline font-bold text-sm active:scale-95 transition-transform" style="background:#23233f;color:#e5e3ff">Cancel</button>
+      <button onclick="confirmDeleteHabit()" class="flex-1 py-3 rounded-xl font-headline font-bold text-sm active:scale-95 transition-transform" style="background:#ff716c;color:#000">Delete</button>
     </div>
   </div>
 </div>
 
 
-<!-- ════════════════════════════════════════
-     TOAST NOTIFICATION
-════════════════════════════════════════ -->
+<!-- TOAST -->
 <div id="toast" class="fixed left-1/2 -translate-x-1/2 z-[300] px-5 py-3 rounded-xl font-headline font-bold text-sm text-black opacity-0 pointer-events-none transition-all duration-300" style="background:var(--primary);top:calc(76px + var(--sat))">
   🔥 Habit complete!
 </div>
@@ -584,7 +627,11 @@ const STORAGE_KEY      = 'kester_habits';
 const STREAK_KEY       = 'kester_streak';
 const BEST_STREAK_KEY  = 'kester_best_streak';
 const LAST_DATE_KEY    = 'kester_last_date';
-const HISTORY_KEY      = 'kester_history'; // { "YYYY-MM-DD": doneCount }
+const HISTORY_KEY      = 'kester_history';
+const NAME_KEY         = 'kester_name';
+const SOUND_KEY        = 'kester_sound';
+const REMINDER_KEY     = 'kester_reminder';
+const REMINDER_TIME_KEY= 'kester_reminder_time';
 
 // ═══════════════════════════════
 // STATE
@@ -595,8 +642,29 @@ let bestStreak   = 0;
 let selectedIcon  = ICONS[0];
 let selectedColor = COLORS[0];
 let selectedFreq  = 'daily';
-let selectedCustomDays = []; // e.g. [0,1,2] = Mon,Tue,Wed
+let selectedCustomDays = [];
 let nextId        = 1;
+let soundEnabled  = true;
+let reminderEnabled = false;
+let pendingDeleteId = null;
+
+// ═══════════════════════════════
+// DAY HELPERS
+// ═══════════════════════════════
+// Returns 0=Mon, 1=Tue, ... 6=Sun (matching customDays index)
+function getTodayDayIndex() {
+  const jsDay = new Date().getDay(); // 0=Sun, 1=Mon... 6=Sat
+  return jsDay === 0 ? 6 : jsDay - 1; // convert to Mon=0...Sun=6
+}
+
+// Returns true if a habit should appear today
+function habitIsScheduledToday(h) {
+  const todayIdx = getTodayDayIndex();
+  if (h.freq === 'daily') return true;
+  if (h.freq === 'weekdays') return todayIdx <= 4; // Mon–Fri = 0–4
+  if (h.freq === 'custom') return h.customDays && h.customDays.includes(todayIdx);
+  return true;
+}
 
 // ═══════════════════════════════
 // PERSISTENCE HELPERS
@@ -612,6 +680,167 @@ function todayKey() {
 }
 
 // ═══════════════════════════════
+// NAME
+// ═══════════════════════════════
+function loadName() {
+  const name = localStorage.getItem(NAME_KEY) || 'Kester';
+  const input = document.getElementById('name-input');
+  if (input) input.value = name;
+  updateGreetingName(name);
+}
+
+function updateName(val) {
+  updateGreetingName(val || 'Kester');
+}
+
+function saveName(val) {
+  const name = val.trim() || 'Kester';
+  localStorage.setItem(NAME_KEY, name);
+  updateGreetingName(name);
+  const input = document.getElementById('name-input');
+  if (input && !val.trim()) input.value = name;
+}
+
+function updateGreetingName(name) {
+  const now = new Date();
+  const h   = now.getHours();
+  const part = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+  const greet = document.getElementById('greeting');
+  if (greet) greet.textContent = `Good ${part}, ${name}`;
+  // Update avatar initial
+  const av = document.getElementById('avatar-initial');
+  if (av) av.textContent = (name[0] || 'K').toUpperCase();
+}
+
+// ═══════════════════════════════
+// SOUND
+// ═══════════════════════════════
+function loadSound() {
+  const stored = localStorage.getItem(SOUND_KEY);
+  soundEnabled = stored === null ? true : stored === 'true';
+  updateSoundUI();
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem(SOUND_KEY, soundEnabled);
+  updateSoundUI();
+  if (soundEnabled) playTick();
+}
+
+function updateSoundUI() {
+  const toggle = document.getElementById('sound-toggle');
+  const label  = document.getElementById('sound-status-text');
+  if (!toggle) return;
+  toggle.className = `toggle-switch ${soundEnabled ? 'on' : 'off'}`;
+  if (label) label.textContent = soundEnabled ? 'Enabled' : 'Disabled';
+}
+
+// ═══════════════════════════════
+// DAILY REMINDER (Web Notifications + scheduled via setInterval check)
+// ═══════════════════════════════
+function loadReminder() {
+  reminderEnabled = localStorage.getItem(REMINDER_KEY) === 'true';
+  const time = localStorage.getItem(REMINDER_TIME_KEY) || '09:00';
+  const timeInput = document.getElementById('reminder-time');
+  if (timeInput) timeInput.value = time;
+  updateReminderUI();
+}
+
+function toggleReminder() {
+  if (!reminderEnabled) {
+    // Request permission first
+    if (!('Notification' in window)) {
+      showToast('⚠️ Notifications not supported');
+      return;
+    }
+    Notification.requestPermission().then(perm => {
+      if (perm === 'granted') {
+        reminderEnabled = true;
+        localStorage.setItem(REMINDER_KEY, 'true');
+        updateReminderUI();
+        scheduleReminderCheck();
+        showToast('🔔 Reminder enabled!');
+      } else {
+        showToast('⚠️ Permission denied');
+        updateReminderUI();
+      }
+    });
+  } else {
+    reminderEnabled = false;
+    localStorage.setItem(REMINDER_KEY, 'false');
+    updateReminderUI();
+    showToast('🔕 Reminder disabled');
+  }
+}
+
+function saveReminderTime(val) {
+  localStorage.setItem(REMINDER_TIME_KEY, val);
+  showToast(`⏰ Reminder set for ${formatTime12(val)}`);
+}
+
+function updateReminderUI() {
+  const toggle = document.getElementById('reminder-toggle');
+  const label  = document.getElementById('reminder-status-text');
+  const row    = document.getElementById('reminder-time-row');
+  const note   = document.getElementById('reminder-note');
+  if (!toggle) return;
+
+  const hasPerm = 'Notification' in window && Notification.permission === 'granted';
+  toggle.className = `toggle-switch ${reminderEnabled && hasPerm ? 'on' : 'off'}`;
+
+  if (reminderEnabled && hasPerm) {
+    const time = localStorage.getItem(REMINDER_TIME_KEY) || '09:00';
+    if (label) label.textContent = `Daily at ${formatTime12(time)}`;
+    if (row) row.classList.remove('hidden');
+    if (note) note.classList.add('hidden');
+  } else {
+    if (label) label.textContent = reminderEnabled ? 'Permission needed' : 'Tap to enable';
+    if (row) row.classList.add('hidden');
+    if (note) note.classList.toggle('hidden', !reminderEnabled);
+  }
+}
+
+function formatTime12(time24) {
+  const [h, m] = time24.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12  = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+
+function testReminder() {
+  if (Notification.permission === 'granted') {
+    new Notification('Kester Habit Tracker 🔥', {
+      body: "Time to check your habits! Stay consistent.",
+      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="%23FC4C02"/><text x="18" y="24" font-size="18" text-anchor="middle" fill="black">K</text></svg>'
+    });
+  } else {
+    showToast('⚠️ Enable notifications first');
+  }
+}
+
+let reminderCheckInterval = null;
+function scheduleReminderCheck() {
+  if (reminderCheckInterval) clearInterval(reminderCheckInterval);
+  reminderCheckInterval = setInterval(() => {
+    if (!reminderEnabled || Notification.permission !== 'granted') return;
+    const now  = new Date();
+    const time = localStorage.getItem(REMINDER_TIME_KEY) || '09:00';
+    const [th, tm] = time.split(':').map(Number);
+    if (now.getHours() === th && now.getMinutes() === tm) {
+      const lastFired = localStorage.getItem('kester_last_notif');
+      const todayStr  = todayKey();
+      if (lastFired !== todayStr) {
+        localStorage.setItem('kester_last_notif', todayStr);
+        new Notification('Kester Habit Tracker 🔥', {
+          body: "Don't break the streak! Check off today's habits.",
+        });
+      }
+    }
+  }, 30000); // check every 30s
+}
+
+// ═══════════════════════════════
 // STREAK LOGIC
 // ═══════════════════════════════
 function updateStreakOnLoad() {
@@ -621,19 +850,19 @@ function updateStreakOnLoad() {
   bestStreak = parseInt(localStorage.getItem(BEST_STREAK_KEY) || '0');
 
   if (lastDate && lastDate !== today) {
-    // Check if yesterday
     const last  = new Date(lastDate);
     const now   = new Date(today);
     const diff  = Math.floor((now - last) / 86400000);
-    if (diff > 1) { streak = 0; saveStreak(); } // broken
+    if (diff > 1) { streak = 0; saveStreak(); }
   }
 }
 
 function recordTodayCompletion() {
-  const today   = todayKey();
-  const done    = habits.filter(h => h.done).length;
-  const total   = habits.length;
-  const allDone = total > 0 && done === total;
+  const today      = todayKey();
+  const todayHabits = habits.filter(h => habitIsScheduledToday(h));
+  const done       = todayHabits.filter(h => h.done).length;
+  const total      = todayHabits.length;
+  const allDone    = total > 0 && done === total;
 
   const history = getHistory();
   history[today] = done;
@@ -676,7 +905,7 @@ function renderStreakUI() {
 }
 
 // ═══════════════════════════════
-// DATE RESET — reset done at midnight
+// DATE RESET
 // ═══════════════════════════════
 function checkDayReset() {
   const today    = todayKey();
@@ -707,18 +936,16 @@ function loadData() {
 // ═══════════════════════════════
 function setGreeting() {
   const now  = new Date();
-  const h    = now.getHours();
-  const part = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
-  document.getElementById('greeting').textContent = `Good ${part}, Kester`;
+  const name = localStorage.getItem(NAME_KEY) || 'Kester';
+  updateGreetingName(name);
 
   const start = new Date(now.getFullYear(), 0, 0);
   const day   = Math.floor((now - start) / 86400000);
   document.getElementById('day-counter').textContent = `Day ${day} of 365`;
 
-  // Date badge in hero — e.g. "Sun, Mar 29"
   const dateLabel = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  const dateLabelEl = document.getElementById('today-date-label');
-  if (dateLabelEl) dateLabelEl.textContent = dateLabel;
+  const greetingDate = document.getElementById('greeting-date');
+  if (greetingDate) greetingDate.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 }
 
 // ═══════════════════════════════
@@ -746,9 +973,13 @@ function switchScreen(name) {
     }
   });
   const fab = document.getElementById('fab');
-  fab.style.display  = name === 'today' ? 'flex' : 'none';
-  fab.style.bottom   = `calc(110px + env(safe-area-inset-bottom, 0px))`;
+  fab.style.display = name === 'today' ? 'flex' : 'none';
   if (name === 'stats') renderStats();
+  if (name === 'settings') {
+    loadName();
+    loadSound();
+    loadReminder();
+  }
 }
 
 // ═══════════════════════════════
@@ -759,6 +990,9 @@ function renderHabits() {
   const empty = document.getElementById('empty-state');
   list.innerHTML = '';
 
+  // Filter to habits scheduled for today
+  const todayHabits = habits.filter(h => habitIsScheduledToday(h));
+
   if (habits.length === 0) {
     empty.classList.remove('hidden');
     updateProgress();
@@ -766,34 +1000,141 @@ function renderHabits() {
   }
   empty.classList.add('hidden');
 
-  habits.forEach(h => {
-    const div = document.createElement('div');
-    div.id = `habit-${h.id}`;
-    div.className = `flex items-center justify-between p-4 rounded-xl transition-all duration-300 ${h.done ? 'habit-done' : ''}`;
-    div.style.background = h.done ? '#17172f' : '#1d1d37';
-    div.innerHTML = `
-      <div class="flex items-center gap-4">
-        <div class="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0" style="background:${h.color}22">
-          <span class="material-symbols-outlined text-xl" style="color:${h.color}">${h.icon}</span>
-        </div>
-        <div>
-          <span class="habit-name font-headline font-semibold text-sm text-on-surface block transition-all">${h.name}</span>
-          <span class="habit-sub text-[10px] text-on-surface-variant transition-all">${h.done ? 'Complete ✓' : h.freq === 'custom' ? (h.customDays && h.customDays.length ? h.customDays.map(d => ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d]).join(' · ') : 'Custom') : h.freq === 'weekdays' ? 'Weekdays' : 'Daily'}</span>
-        </div>
+  if (todayHabits.length === 0) {
+    // Has habits but none scheduled today
+    list.innerHTML = `
+      <div class="text-center py-8">
+        <span class="material-symbols-outlined text-4xl mb-3 block" style="color:#46465c">weekend</span>
+        <p class="font-headline font-bold text-base text-on-surface-variant">Rest day!</p>
+        <p class="text-sm text-on-surface-variant mt-1">No habits scheduled for today.</p>
+      </div>`;
+    updateProgress();
+    return;
+  }
+
+  todayHabits.forEach(h => {
+    const freqLabel = h.freq === 'custom'
+      ? (h.customDays && h.customDays.length ? h.customDays.map(d => ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d]).join(' · ') : 'Custom')
+      : h.freq === 'weekdays' ? 'Weekdays' : 'Daily';
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'habit-wrapper';
+    wrapper.id = `wrapper-${h.id}`;
+    wrapper.innerHTML = `
+      <!-- Delete background -->
+      <div class="habit-delete-bg" id="delbg-${h.id}">
+        <span class="material-symbols-outlined filled text-2xl" style="color:#ff716c">delete</span>
       </div>
-      <button onclick="toggleHabit(${h.id}, event)" class="relative flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90" id="check-${h.id}"
-        style="${h.done ? `background:var(--primary);box-shadow:0 0 16px rgba(252,76,2,0.4)` : `border:2px solid var(--primary)`}">
-        ${h.done ? `<span class="material-symbols-outlined filled text-sm text-black check-icon-animate">check</span>` : ''}
-      </button>
+      <!-- Habit card -->
+      <div class="habit-card flex items-center justify-between p-4 ${h.done ? 'habit-done' : ''}" id="habit-${h.id}" style="${h.done ? 'background:#17172f' : 'background:#1d1d37'}">
+        <div class="flex items-center gap-4 flex-1 min-w-0">
+          <div class="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0" style="background:${h.color}22">
+            <span class="material-symbols-outlined text-xl" style="color:${h.color}">${h.icon}</span>
+          </div>
+          <div class="min-w-0">
+            <span class="habit-name font-headline font-semibold text-sm text-on-surface block transition-all truncate">${h.name}</span>
+            <span class="habit-sub text-[10px] text-on-surface-variant transition-all">${h.done ? 'Complete ✓' : freqLabel}</span>
+          </div>
+        </div>
+        <button onclick="toggleHabit(${h.id}, event)" class="relative flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90 ml-3" id="check-${h.id}"
+          style="${h.done ? `background:var(--primary);box-shadow:0 0 16px rgba(252,76,2,0.4)` : `border:2px solid var(--primary)`}">
+          ${h.done ? `<span class="material-symbols-outlined filled text-sm text-black check-icon-animate">check</span>` : ''}
+        </button>
+      </div>
     `;
-    list.appendChild(div);
+    list.appendChild(wrapper);
+
+    // Attach swipe-to-delete
+    attachSwipe(h.id);
   });
+
   updateProgress();
 }
 
+// ═══════════════════════════════
+// SWIPE TO DELETE
+// ═══════════════════════════════
+function attachSwipe(id) {
+  const card = document.getElementById(`habit-${id}`);
+  if (!card) return;
+
+  let startX = 0, currentX = 0, isSwiping = false, swiped = false;
+
+  card.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    isSwiping = true;
+    swiped = card.classList.contains('swiped');
+  }, { passive: true });
+
+  card.addEventListener('touchmove', (e) => {
+    if (!isSwiping) return;
+    currentX = e.touches[0].clientX - startX;
+    const dx = swiped ? currentX - 80 : currentX;
+    if (dx < 0 && dx > -100) {
+      card.style.transform = `translateX(${Math.max(dx, -80)}px)`;
+      const bg = document.getElementById(`delbg-${id}`);
+      if (bg) bg.classList.toggle('active-delete', dx < -40);
+    } else if (dx > 0 && swiped) {
+      card.style.transform = `translateX(${Math.min(0, dx - 80)}px)`;
+    }
+  }, { passive: true });
+
+  card.addEventListener('touchend', () => {
+    if (!isSwiping) return;
+    isSwiping = false;
+    const dx = swiped ? currentX - 80 : currentX;
+    card.style.transform = '';
+
+    if (dx < -50) {
+      // Fully swiped — show delete confirm
+      card.classList.add('swiped');
+      setTimeout(() => promptDeleteHabit(id), 100);
+    } else {
+      card.classList.remove('swiped');
+    }
+    const bg = document.getElementById(`delbg-${id}`);
+    if (bg) bg.classList.remove('active-delete');
+  });
+}
+
+// ═══════════════════════════════
+// DELETE HABIT
+// ═══════════════════════════════
+function promptDeleteHabit(id) {
+  pendingDeleteId = id;
+  const h = habits.find(x => x.id === id);
+  const nameEl = document.getElementById('delete-habit-name-display');
+  if (nameEl && h) nameEl.textContent = `"${h.name}" will be deleted.`;
+  document.getElementById('delete-habit-overlay').classList.add('open');
+}
+
+function closeDeleteHabit() {
+  document.getElementById('delete-habit-overlay').classList.remove('open');
+  // Unswipe if cancelled
+  if (pendingDeleteId) {
+    const card = document.getElementById(`habit-${pendingDeleteId}`);
+    if (card) card.classList.remove('swiped');
+    pendingDeleteId = null;
+  }
+}
+
+function confirmDeleteHabit() {
+  if (!pendingDeleteId) return;
+  habits = habits.filter(h => h.id !== pendingDeleteId);
+  saveHabits();
+  pendingDeleteId = null;
+  document.getElementById('delete-habit-overlay').classList.remove('open');
+  renderHabits();
+  showToast('🗑️ Habit deleted');
+}
+
+// ═══════════════════════════════
+// PROGRESS
+// ═══════════════════════════════
 function updateProgress() {
-  const done  = habits.filter(h => h.done).length;
-  const total = habits.length;
+  const todayHabits = habits.filter(h => habitIsScheduledToday(h));
+  const done  = todayHabits.filter(h => h.done).length;
+  const total = todayHabits.length;
   const pct   = total ? Math.round(done / total * 100) : 0;
 
   document.getElementById('done-count').textContent  = done;
@@ -804,10 +1145,6 @@ function updateProgress() {
   const circ = 2 * Math.PI * 15.9;
   document.getElementById('progress-ring').setAttribute('stroke-dasharray',
     `${(pct / 100 * circ).toFixed(1)} ${circ.toFixed(1)}`);
-
-  if (pct === 100 && total > 0) {
-    document.getElementById('greeting-sub').textContent = `🔥 All done! Streak incoming!`;
-  }
 }
 
 // ═══════════════════════════════
@@ -832,7 +1169,7 @@ function toggleHabit(id, e) {
     row.style.background  = '#17172f';
     spawnConfetti(btn);
     showToast(`🔥 ${habit.name} done!`);
-    playTick();
+    if (soundEnabled) playTick();
   } else {
     btn.style.background = '';
     btn.style.boxShadow  = '';
@@ -843,9 +1180,13 @@ function toggleHabit(id, e) {
     row.style.background = '#1d1d37';
   }
 
+  const freqLabel = habit.freq === 'custom'
+    ? (habit.customDays && habit.customDays.length ? habit.customDays.map(d => ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d]).join(' · ') : 'Custom')
+    : habit.freq === 'weekdays' ? 'Weekdays' : 'Daily';
+
   setTimeout(() => {
     const sub = row.querySelector('.habit-sub');
-    if (sub) sub.textContent = habit.done ? 'Complete ✓' : habit.freq === 'custom' ? (habit.customDays && habit.customDays.length ? habit.customDays.map(d => ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d]).join(' · ') : 'Custom') : habit.freq === 'weekdays' ? 'Weekdays' : 'Daily';
+    if (sub) sub.textContent = habit.done ? 'Complete ✓' : freqLabel;
   }, 50);
 
   updateProgress();
@@ -901,30 +1242,28 @@ function showToast(msg) {
 }
 
 // ═══════════════════════════════
-// STATS RENDER (real data)
+// STATS RENDER
 // ═══════════════════════════════
 function renderStats() {
   renderStreakUI();
 
-  // Stat cards
-  const done  = habits.filter(h => h.done).length;
-  const total = habits.length;
+  const todayHabits = habits.filter(h => habitIsScheduledToday(h));
+  const done  = todayHabits.filter(h => h.done).length;
+  const total = todayHabits.length;
   const pct   = total ? Math.round(done / total * 100) : 0;
   document.getElementById('stat-done').textContent  = done;
-  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-total').textContent = habits.length;
   document.getElementById('stat-pct').textContent   = pct + '%';
 
-  // Week range label
   const now = new Date();
-  const dow = now.getDay(); // 0=Sun
+  const dow = now.getDay();
   const mon = new Date(now); mon.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
   const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
   const fmt = d => d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
   document.getElementById('week-range').textContent = `${fmt(mon)} – ${fmt(sun)}`;
 
-  // Build week bars from real history
   const history = getHistory();
-  const today = now.getDay() === 0 ? 6 : now.getDay() - 1; // 0=Mon index
+  const todayIdx = getTodayDayIndex(); // Mon=0
   const barsEl = document.getElementById('week-bars');
   barsEl.innerHTML = '';
 
@@ -932,9 +1271,9 @@ function renderStats() {
     const d = new Date(mon); d.setDate(mon.getDate() + i);
     const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const dayDone  = history[key] || 0;
-    const dayTotal = total || 1;
+    const dayTotal = habits.length || 1;
     const pctDay   = Math.round(dayDone / dayTotal * 100);
-    const isToday  = i === today;
+    const isToday  = i === todayIdx;
     const isHigh   = pctDay >= 90;
     const color    = pctDay > 0 ? (isHigh ? 'var(--primary)' : '#46465c') : '#1d1d37';
 
@@ -946,7 +1285,6 @@ function renderStats() {
       </div>`;
   }
 
-  // Per-habit breakdown (based on today's done state)
   const breakEl = document.getElementById('breakdown-list');
   if (habits.length === 0) {
     breakEl.innerHTML = `<p class="text-sm text-on-surface-variant text-center py-4">No habits added yet.</p>`;
@@ -982,7 +1320,6 @@ function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
   document.getElementById('habit-name-input').value = '';
   document.getElementById('habit-name-input').style.outline = '';
-  // Reset to Daily
   selectedFreq = 'daily';
   selectedCustomDays = [];
   document.getElementById('custom-day-picker').classList.add('hidden');
@@ -1036,7 +1373,6 @@ function selectFreq(btn) {
     b.style.color      = active ? '#000' : '';
     b.classList.toggle('text-on-surface-variant', !active);
   });
-  // Show/hide custom day picker
   const picker = document.getElementById('custom-day-picker');
   if (selectedFreq === 'custom') {
     picker.classList.remove('hidden');
@@ -1044,7 +1380,6 @@ function selectFreq(btn) {
   } else {
     picker.classList.add('hidden');
   }
-  // Preset weekdays
   if (selectedFreq === 'weekdays') {
     selectedCustomDays = [0,1,2,3,4];
   } else if (selectedFreq === 'daily') {
@@ -1125,11 +1460,9 @@ function closeConfirm() {
   document.getElementById('confirm-overlay').classList.remove('open');
 }
 function resetAllData() {
-  // Wipe every key we use
   [STORAGE_KEY, STREAK_KEY, BEST_STREAK_KEY, LAST_DATE_KEY,
    LAST_DATE_KEY + '_reset', HISTORY_KEY].forEach(k => localStorage.removeItem(k));
 
-  // Reset state
   habits      = [];
   streak      = 0;
   bestStreak  = 0;
@@ -1153,12 +1486,14 @@ function resetAllData() {
   checkDayReset();
   updateStreakOnLoad();
   setGreeting();
+  loadSound();
+  loadReminder();
   buildIconGrid();
   buildColorGrid();
   renderHabits();
   renderStreakUI();
+  if (reminderEnabled) scheduleReminderCheck();
 
-  // Freq button style init
   const activeFreqBtn = document.querySelector('.freq-btn.active-freq');
   if (activeFreqBtn) {
     activeFreqBtn.style.background = 'var(--primary)';
