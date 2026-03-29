@@ -1,6 +1,6 @@
 {
-  "name": "Kester Habit Tracker",
-  "short_name": "Kester",
+  "name": "Konsist - Habit Tracker",
+  "short_name": "Konsist",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0c0c1f",
