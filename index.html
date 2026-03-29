@@ -221,7 +221,7 @@
     </div>
     <div>
       <p class="font-headline font-bold text-base leading-none text-on-surface" id="greeting">Good morning, Kester</p>
-      <p class="text-[10px] text-on-surface-variant mt-0.5" id="greeting-sub">Keep your streak alive.</p>
+      <p class="font-headline font-extrabold text-xs uppercase tracking-wider mt-0.5" style="color:var(--primary)" id="greeting-date">Sunday, Mar 29</p>
     </div>
   </div>
   <div class="flex items-center gap-1">
@@ -238,7 +238,9 @@
 
   <!-- Hero Progress Card -->
   <section class="mt-4 mb-6">
-    <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant mb-2">Momentum Status</p>
+    <div class="flex items-center justify-between mb-2">
+      <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">Momentum Status</p>
+    </div>
     <h2 class="font-headline font-extrabold text-4xl tracking-tighter leading-tight mb-4">
       Today's Mission — <span style="color:var(--primary)">lock it in.</span>
     </h2>
@@ -461,7 +463,7 @@
 <!-- ════════════════════════════════════════
      FAB — Add Habit (positioned via CSS with safe area)
 ════════════════════════════════════════ -->
-<button id="fab" class="fab fixed right-5 w-14 h-14 rounded-xl flex items-center justify-center z-40 active:scale-90 transition-transform" style="background:var(--primary);bottom:calc(110px + env(safe-area-inset-bottom, 0px))" onclick="openModal()">
+<button id="fab" class="fab fixed right-5 w-14 h-14 rounded-xl flex items-center justify-center z-40 active:scale-90 transition-transform" style="background:var(--primary);bottom:calc(90px + env(safe-area-inset-bottom, 0px))" onclick="openModal()">
   <span class="material-symbols-outlined text-3xl font-black text-black">add</span>
 </button>
 
@@ -510,6 +512,13 @@
           <button class="flex-1 py-2.5 rounded-lg text-xs font-bold transition-all freq-btn active-freq" data-freq="daily" onclick="selectFreq(this)">Daily</button>
           <button class="flex-1 py-2.5 rounded-lg text-xs font-bold text-on-surface-variant transition-all freq-btn" data-freq="weekdays" onclick="selectFreq(this)">Weekdays</button>
           <button class="flex-1 py-2.5 rounded-lg text-xs font-bold text-on-surface-variant transition-all freq-btn" data-freq="custom" onclick="selectFreq(this)">Custom</button>
+        </div>
+
+        <!-- Custom day picker — shown only when Custom is selected -->
+        <div id="custom-day-picker" class="hidden mt-4">
+          <p class="text-[10px] text-on-surface-variant font-bold uppercase tracking-widest mb-3">Select days</p>
+          <div class="flex gap-2 justify-between" id="day-picker-row"></div>
+          <p class="text-[10px] text-on-surface-variant mt-3 text-center" id="custom-days-summary">No days selected</p>
         </div>
       </div>
 
@@ -586,6 +595,7 @@ let bestStreak   = 0;
 let selectedIcon  = ICONS[0];
 let selectedColor = COLORS[0];
 let selectedFreq  = 'daily';
+let selectedCustomDays = []; // e.g. [0,1,2] = Mon,Tue,Wed
 let nextId        = 1;
 
 // ═══════════════════════════════
@@ -696,13 +706,19 @@ function loadData() {
 // GREETING
 // ═══════════════════════════════
 function setGreeting() {
-  const h = new Date().getHours();
+  const now  = new Date();
+  const h    = now.getHours();
   const part = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
   document.getElementById('greeting').textContent = `Good ${part}, Kester`;
 
-  const start = new Date(new Date().getFullYear(), 0, 0);
-  const day   = Math.floor((new Date() - start) / 86400000);
+  const start = new Date(now.getFullYear(), 0, 0);
+  const day   = Math.floor((now - start) / 86400000);
   document.getElementById('day-counter').textContent = `Day ${day} of 365`;
+
+  // Date badge in hero — e.g. "Sun, Mar 29"
+  const dateLabel = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const dateLabelEl = document.getElementById('today-date-label');
+  if (dateLabelEl) dateLabelEl.textContent = dateLabel;
 }
 
 // ═══════════════════════════════
@@ -731,7 +747,7 @@ function switchScreen(name) {
   });
   const fab = document.getElementById('fab');
   fab.style.display  = name === 'today' ? 'flex' : 'none';
-  fab.style.bottom   = `calc(90px + env(safe-area-inset-bottom, 0px))`;
+  fab.style.bottom   = `calc(110px + env(safe-area-inset-bottom, 0px))`;
   if (name === 'stats') renderStats();
 }
 
@@ -762,7 +778,7 @@ function renderHabits() {
         </div>
         <div>
           <span class="habit-name font-headline font-semibold text-sm text-on-surface block transition-all">${h.name}</span>
-          <span class="habit-sub text-[10px] text-on-surface-variant transition-all">${h.done ? 'Complete ✓' : h.freq === 'weekdays' ? 'Weekdays' : 'Daily'}</span>
+          <span class="habit-sub text-[10px] text-on-surface-variant transition-all">${h.done ? 'Complete ✓' : h.freq === 'custom' ? (h.customDays && h.customDays.length ? h.customDays.map(d => ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d]).join(' · ') : 'Custom') : h.freq === 'weekdays' ? 'Weekdays' : 'Daily'}</span>
         </div>
       </div>
       <button onclick="toggleHabit(${h.id}, event)" class="relative flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90" id="check-${h.id}"
@@ -791,12 +807,6 @@ function updateProgress() {
 
   if (pct === 100 && total > 0) {
     document.getElementById('greeting-sub').textContent = `🔥 All done! Streak incoming!`;
-  } else if (total === 0) {
-    document.getElementById('greeting-sub').textContent = `Add your first habit below.`;
-  } else {
-    document.getElementById('greeting-sub').textContent = streak > 0
-      ? `${streak}-day streak — don't break it.`
-      : `Keep going, build that streak!`;
   }
 }
 
@@ -835,7 +845,7 @@ function toggleHabit(id, e) {
 
   setTimeout(() => {
     const sub = row.querySelector('.habit-sub');
-    if (sub) sub.textContent = habit.done ? 'Complete ✓' : (habit.freq === 'weekdays' ? 'Weekdays' : 'Daily');
+    if (sub) sub.textContent = habit.done ? 'Complete ✓' : habit.freq === 'custom' ? (habit.customDays && habit.customDays.length ? habit.customDays.map(d => ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d]).join(' · ') : 'Custom') : habit.freq === 'weekdays' ? 'Weekdays' : 'Daily';
   }, 50);
 
   updateProgress();
@@ -972,6 +982,16 @@ function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
   document.getElementById('habit-name-input').value = '';
   document.getElementById('habit-name-input').style.outline = '';
+  // Reset to Daily
+  selectedFreq = 'daily';
+  selectedCustomDays = [];
+  document.getElementById('custom-day-picker').classList.add('hidden');
+  document.querySelectorAll('.freq-btn').forEach((b, i) => {
+    const active = i === 0;
+    b.style.background = active ? 'var(--primary)' : '';
+    b.style.color      = active ? '#000' : '';
+    b.classList.toggle('text-on-surface-variant', !active);
+  });
 }
 function closeModalOnBackdrop(e) {
   if (e.target === document.getElementById('modal-overlay')) closeModal();
@@ -1005,6 +1025,9 @@ function buildColorGrid() {
   });
 }
 
+const DAY_LABELS = ['M','T','W','T','F','S','S'];
+const DAY_NAMES  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
 function selectFreq(btn) {
   selectedFreq = btn.dataset.freq;
   document.querySelectorAll('.freq-btn').forEach(b => {
@@ -1013,6 +1036,60 @@ function selectFreq(btn) {
     b.style.color      = active ? '#000' : '';
     b.classList.toggle('text-on-surface-variant', !active);
   });
+  // Show/hide custom day picker
+  const picker = document.getElementById('custom-day-picker');
+  if (selectedFreq === 'custom') {
+    picker.classList.remove('hidden');
+    buildDayPicker();
+  } else {
+    picker.classList.add('hidden');
+  }
+  // Preset weekdays
+  if (selectedFreq === 'weekdays') {
+    selectedCustomDays = [0,1,2,3,4];
+  } else if (selectedFreq === 'daily') {
+    selectedCustomDays = [0,1,2,3,4,5,6];
+  }
+}
+
+function buildDayPicker() {
+  const row = document.getElementById('day-picker-row');
+  row.innerHTML = '';
+  DAY_LABELS.forEach((label, i) => {
+    const btn = document.createElement('button');
+    const active = selectedCustomDays.includes(i);
+    btn.className = 'flex-1 flex flex-col items-center gap-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-90';
+    btn.style.background  = active ? 'var(--primary)' : '#111127';
+    btn.style.color       = active ? '#000' : '#74738b';
+    btn.style.border      = active ? 'none' : '1px solid #46465c';
+    btn.innerHTML = `<span>${label}</span>`;
+    btn.onclick = () => {
+      if (selectedCustomDays.includes(i)) {
+        selectedCustomDays = selectedCustomDays.filter(d => d !== i);
+      } else {
+        selectedCustomDays = [...selectedCustomDays, i].sort();
+      }
+      buildDayPicker();
+      updateCustomDaysSummary();
+    };
+    row.appendChild(btn);
+  });
+  updateCustomDaysSummary();
+}
+
+function updateCustomDaysSummary() {
+  const el = document.getElementById('custom-days-summary');
+  if (!el) return;
+  if (selectedCustomDays.length === 0) {
+    el.textContent = 'No days selected';
+    el.style.color = '#ff716c';
+  } else if (selectedCustomDays.length === 7) {
+    el.textContent = 'Every day';
+    el.style.color = '#74738b';
+  } else {
+    el.textContent = selectedCustomDays.map(d => DAY_NAMES[d]).join(' · ');
+    el.style.color = '#74738b';
+  }
 }
 
 function addHabit() {
@@ -1022,7 +1099,16 @@ function addHabit() {
     setTimeout(() => document.getElementById('habit-name-input').style.outline = '', 1500);
     return;
   }
-  habits.push({ id: nextId++, name, icon: selectedIcon, color: selectedColor, done: false, freq: selectedFreq });
+  if (selectedFreq === 'custom' && selectedCustomDays.length === 0) {
+    const summary = document.getElementById('custom-days-summary');
+    if (summary) { summary.style.color = '#ff716c'; summary.textContent = 'Pick at least one day!'; }
+    setTimeout(() => updateCustomDaysSummary(), 1500);
+    return;
+  }
+  const customDays = selectedFreq === 'custom' ? [...selectedCustomDays]
+                   : selectedFreq === 'weekdays' ? [0,1,2,3,4]
+                   : [0,1,2,3,4,5,6];
+  habits.push({ id: nextId++, name, icon: selectedIcon, color: selectedColor, done: false, freq: selectedFreq, customDays });
   saveHabits();
   closeModal();
   renderHabits();
