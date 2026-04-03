@@ -154,7 +154,8 @@
   .habit-done .habit-name { opacity: 0.45; text-decoration: line-through; }
   .habit-done .habit-sub  { opacity: 0.35; }
 
-  .bar-group:hover .bar-tip { opacity: 1 !important; }
+  /* Line chart glow */
+  .line-chart-glow { filter: drop-shadow(0 0 4px rgba(252, 76, 2, 0.45)); }
 
   @keyframes slide-up {
     from { opacity: 0; transform: translateY(20px); }
@@ -168,18 +169,9 @@
   .stagger > *:nth-child(5) { animation-delay: 0.25s; }
   .stagger > *:nth-child(6) { animation-delay: 0.30s; }
 
-  #topbar {
-    padding-top: calc(1rem + var(--sat));
-  }
-
-  .screen {
-    padding-top: calc(80px + var(--sat));
-  }
-
-  /* ── Bottom nav: NO safe-area padding ── */
-  #bottom-nav {
-    padding-bottom: 1.25rem;
-  }
+  #topbar { padding-top: calc(1rem + var(--sat)); }
+  .screen { padding-top: calc(80px + var(--sat)); }
+  #bottom-nav { padding-bottom: 1.25rem; }
 
   .confirm-overlay {
     display: none; position: fixed; inset: 0;
@@ -188,76 +180,48 @@
   }
   .confirm-overlay.open { display: flex; }
 
-  /* ── Swipe-to-delete ── */
   .habit-wrapper {
-    position: relative;
-    overflow: hidden;
-    border-radius: 0.75rem;
+    position: relative; overflow: hidden; border-radius: 0.75rem;
   }
   .habit-delete-bg {
-    position: absolute;
-    right: 0; top: 0; bottom: 0;
-    width: 80px;
-    background: #ff716c22;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 0.75rem;
-    border: 1px solid rgba(255,113,108,0.2);
-    transition: background 0.2s;
+    position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
+    background: #ff716c22; display: flex; align-items: center; justify-content: center;
+    border-radius: 0.75rem; border: 1px solid rgba(255,113,108,0.2); transition: background 0.2s;
   }
   .habit-delete-bg.active-delete { background: #ff716c33; }
   .habit-card {
-    position: relative;
-    z-index: 1;
+    position: relative; z-index: 1;
     transition: transform 0.2s cubic-bezier(.22,.61,.36,1);
-    touch-action: pan-y;
-    background: #1d1d37;
-    border-radius: 0.75rem;
+    touch-action: pan-y; background: #1d1d37; border-radius: 0.75rem;
   }
   .habit-card.swiped { transform: translateX(-80px); }
 
-  /* ── Name input edit ── */
-  .name-input-edit {
-    background: transparent;
-    border: none;
-    outline: none;
-    color: #e5e3ff;
-    font-family: 'Lexend', sans-serif;
-    font-weight: 600;
-    font-size: 0.875rem;
-    width: 100%;
-    padding: 2px 4px;
-    border-bottom: 1px solid var(--primary);
-  }
-
-  /* ── Reminder time picker ── */
   input[type="time"] {
-    background: #111127;
-    border: 1px solid #46465c;
-    color: #e5e3ff;
-    border-radius: 8px;
-    padding: 6px 10px;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.875rem;
+    background: #111127; border: 1px solid #46465c; color: #e5e3ff;
+    border-radius: 8px; padding: 6px 10px;
+    font-family: 'Inter', sans-serif; font-size: 0.875rem;
   }
   input[type="time"]:focus { outline: 1px solid var(--primary); }
 
-  /* ── Toggle switch ── */
   .toggle-switch {
     width: 44px; height: 24px; border-radius: 12px;
-    position: relative; cursor: pointer;
-    transition: background 0.2s;
-    flex-shrink: 0;
+    position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0;
   }
   .toggle-switch .knob {
-    width: 20px; height: 20px; border-radius: 50%;
-    background: #000;
-    position: absolute; top: 2px;
-    transition: left 0.2s;
+    width: 20px; height: 20px; border-radius: 50%; background: #000;
+    position: absolute; top: 2px; transition: left 0.2s;
   }
-  .toggle-switch.on { background: var(--primary); }
-  .toggle-switch.on .knob { left: 22px; }
+  .toggle-switch.on  { background: var(--primary); }
+  .toggle-switch.on  .knob { left: 22px; }
   .toggle-switch.off { background: #46465c; }
   .toggle-switch.off .knob { left: 2px; }
+
+  /* FIX: bar rise animation (height-based, not width) */
+  @keyframes bar-rise {
+    from { transform: scaleY(0); transform-origin: bottom; }
+    to   { transform: scaleY(1); transform-origin: bottom; }
+  }
+  .week-bar { animation: bar-rise 0.55s cubic-bezier(.22,.61,.36,1) both; }
 </style>
 </head>
 <body>
@@ -322,9 +286,7 @@
       <h3 class="font-headline font-bold text-xl tracking-tight">Active Disciplines</h3>
       <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Today</span>
     </div>
-
     <div class="flex flex-col gap-3 stagger" id="habits-list"></div>
-
     <div id="empty-state" class="hidden text-center py-12">
       <span class="material-symbols-outlined text-5xl mb-3 block" style="color:#46465c">add_task</span>
       <p class="font-headline font-bold text-lg text-on-surface-variant">No habits yet</p>
@@ -370,8 +332,10 @@
       <h2 class="font-headline font-bold text-xl tracking-tight">Weekly Activity</h2>
       <span class="text-[10px] text-on-surface-variant" id="week-range"></span>
     </div>
-    <div class="rounded-xl p-6" style="background:#111127">
-      <div class="flex items-end justify-between h-40 gap-1.5" id="week-bars"></div>
+    <div class="rounded-xl px-5 pt-8 pb-5" style="background:#111127">
+      <svg id="week-line-chart" width="100%" viewBox="0 0 300 96" preserveAspectRatio="none" style="overflow:visible;display:block"></svg>
+      <!-- Day labels row -->
+      <div class="flex justify-between mt-5 px-0" id="week-day-labels"></div>
     </div>
   </section>
 
@@ -410,7 +374,6 @@
 
   <div class="flex flex-col gap-3">
 
-    <!-- Name — WORKING -->
     <div class="rounded-xl p-5" style="background:#1d1d37">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3 flex-1 min-w-0">
@@ -428,7 +391,6 @@
       </div>
     </div>
 
-    <!-- Daily Reminder — WORKING -->
     <div class="rounded-xl p-5" style="background:#1d1d37">
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-3">
@@ -447,10 +409,9 @@
         <input type="time" id="reminder-time" value="09:00" onchange="saveReminderTime(this.value)"/>
         <button onclick="testReminder()" class="ml-auto text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg active:scale-90 transition-transform" style="background:rgba(252,76,2,0.12);color:var(--primary);border:1px solid rgba(252,76,2,0.2)">Test</button>
       </div>
-      <p id="reminder-note" class="hidden text-[10px] text-on-surface-variant mt-2 leading-relaxed">⚠️ Notifications require browser permission. On iOS Safari, add this page to your Home Screen first, then reload.</p>
+      <p id="reminder-note" class="hidden text-[10px] text-on-surface-variant mt-2 leading-relaxed">&#9888;&#65039; Notifications require browser permission. On iOS Safari, add this page to your Home Screen first, then reload.</p>
     </div>
 
-    <!-- Completion Sound — WORKING -->
     <div class="rounded-xl p-5 flex items-center justify-between" style="background:#1d1d37">
       <div class="flex items-center gap-3">
         <span class="material-symbols-outlined" style="color:var(--primary)">volume_up</span>
@@ -464,13 +425,12 @@
       </div>
     </div>
 
-    <!-- Reset All Data -->
     <button onclick="confirmReset()" class="w-full rounded-xl p-5 flex items-center justify-between active:scale-95 transition-transform text-left" style="background:#1d1d37">
       <div class="flex items-center gap-3">
         <span class="material-symbols-outlined" style="color:#ff716c">delete_sweep</span>
         <div>
           <p class="font-headline font-semibold text-sm" style="color:#ff716c">Reset All Data</p>
-          <p class="text-xs text-on-surface-variant">Clear all habits & history</p>
+          <p class="text-xs text-on-surface-variant">Clear all habits &amp; history</p>
         </div>
       </div>
       <span class="material-symbols-outlined text-on-surface-variant text-sm">chevron_right</span>
@@ -478,7 +438,7 @@
   </div>
 
   <div class="mt-8 text-center">
-    <p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Kester's Habit Tracker • PWA v1.1</p>
+    <p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Kester's Habit Tracker • PWA v1.2</p>
     <p class="text-[10px] text-on-surface-variant mt-1">All data stored locally. No login required.</p>
   </div>
 </main>
@@ -491,13 +451,11 @@
     <span class="text-[10px] font-bold uppercase tracking-widest nav-label" style="color:var(--primary)" id="nav-label-today">Today</span>
     <div class="nav-dot" id="nav-dot-today"></div>
   </button>
-
   <button class="nav-btn flex flex-col items-center gap-1 transition-all active:scale-90 opacity-50" data-screen="stats" onclick="switchScreen('stats')">
     <span class="material-symbols-outlined text-2xl nav-icon text-on-surface-variant" id="nav-icon-stats">leaderboard</span>
     <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant nav-label" id="nav-label-stats">Stats</span>
     <div class="hidden" id="nav-dot-stats" style="width:4px;height:4px;border-radius:50%;background:var(--primary)"></div>
   </button>
-
   <button class="nav-btn flex flex-col items-center gap-1 transition-all active:scale-90 opacity-50" data-screen="settings" onclick="switchScreen('settings')">
     <span class="material-symbols-outlined text-2xl nav-icon text-on-surface-variant" id="nav-icon-settings">settings</span>
     <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant nav-label" id="nav-label-settings">Settings</span>
@@ -532,17 +490,14 @@
           class="w-full rounded-xl p-4 text-on-surface placeholder:text-outline font-body text-sm transition-all"
           style="background:#111127;border:1px solid #46465c"/>
       </div>
-
       <div>
         <label class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold block mb-3">Icon</label>
         <div class="grid grid-cols-5 gap-3" id="icon-grid"></div>
       </div>
-
       <div>
         <label class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold block mb-3">Color</label>
         <div class="flex flex-wrap gap-3" id="color-grid"></div>
       </div>
-
       <div>
         <label class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold block mb-3">Frequency</label>
         <div class="flex rounded-xl overflow-hidden p-1 gap-1" style="background:#111127">
@@ -550,14 +505,12 @@
           <button class="flex-1 py-2.5 rounded-lg text-xs font-bold text-on-surface-variant transition-all freq-btn" data-freq="weekdays" onclick="selectFreq(this)">Weekdays</button>
           <button class="flex-1 py-2.5 rounded-lg text-xs font-bold text-on-surface-variant transition-all freq-btn" data-freq="custom" onclick="selectFreq(this)">Custom</button>
         </div>
-
         <div id="custom-day-picker" class="hidden mt-4">
           <p class="text-[10px] text-on-surface-variant font-bold uppercase tracking-widest mb-3">Select days</p>
           <div class="flex gap-2 justify-between" id="day-picker-row"></div>
           <p class="text-[10px] text-on-surface-variant mt-3 text-center" id="custom-days-summary">No days selected</p>
         </div>
       </div>
-
       <button class="w-full py-5 rounded-xl font-headline font-bold text-lg uppercase tracking-tight active:scale-95 transition-transform" style="background:var(--primary);color:#000;box-shadow:0 12px 32px -6px rgba(252,76,2,0.4)" onclick="addHabit()">
         Start Habit
       </button>
@@ -608,14 +561,14 @@
 
 <!-- TOAST -->
 <div id="toast" class="fixed left-1/2 -translate-x-1/2 z-[300] px-5 py-3 rounded-xl font-headline font-bold text-sm text-black opacity-0 pointer-events-none transition-all duration-300" style="background:var(--primary);top:calc(76px + var(--sat))">
-  🔥 Habit complete!
+  Habit complete!
 </div>
 
 
 <script>
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // CONSTANTS
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 const ICONS = [
   'fitness_center','water_drop','auto_stories','self_improvement','nutrition',
   'bedtime','directions_run','bolt','psychology','coffee',
@@ -626,76 +579,70 @@ const COLORS = [
   '#60a5fa','#f472b6','#fb923c','#a78bfa','#2dd4bf'
 ];
 const WEEK_DAYS = ['M','T','W','T','F','S','S'];
-const STORAGE_KEY      = 'kester_habits';
-const STREAK_KEY       = 'kester_streak';
-const BEST_STREAK_KEY  = 'kester_best_streak';
-const LAST_DATE_KEY    = 'kester_last_date';
-const HISTORY_KEY      = 'kester_history';
-const NAME_KEY         = 'kester_name';
-const SOUND_KEY        = 'kester_sound';
-const REMINDER_KEY     = 'kester_reminder';
-const REMINDER_TIME_KEY= 'kester_reminder_time';
+const STORAGE_KEY       = 'kester_habits';
+const STREAK_KEY        = 'kester_streak';
+const BEST_STREAK_KEY   = 'kester_best_streak';
+const LAST_DATE_KEY     = 'kester_last_date';
+const HISTORY_KEY       = 'kester_history';
+const NAME_KEY          = 'kester_name';
+const SOUND_KEY         = 'kester_sound';
+const REMINDER_KEY      = 'kester_reminder';
+const REMINDER_TIME_KEY = 'kester_reminder_time';
 
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // STATE
-// ═══════════════════════════════
-let habits       = [];
-let streak       = 0;
-let bestStreak   = 0;
-let selectedIcon  = ICONS[0];
-let selectedColor = COLORS[0];
-let selectedFreq  = 'daily';
+// ═══════════════════════════════════════
+let habits             = [];
+let streak             = 0;
+let bestStreak         = 0;
+let selectedIcon       = ICONS[0];
+let selectedColor      = COLORS[0];
+let selectedFreq       = 'daily';
 let selectedCustomDays = [];
-let nextId        = 1;
-let soundEnabled  = true;
-let reminderEnabled = false;
-let pendingDeleteId = null;
+let nextId             = 1;
+let soundEnabled       = true;
+let reminderEnabled    = false;
+let pendingDeleteId    = null;
 
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // DAY HELPERS
-// ═══════════════════════════════
-// Returns 0=Mon, 1=Tue, ... 6=Sun (matching customDays index)
+// ═══════════════════════════════════════
 function getTodayDayIndex() {
-  const jsDay = new Date().getDay(); // 0=Sun, 1=Mon... 6=Sat
-  return jsDay === 0 ? 6 : jsDay - 1; // convert to Mon=0...Sun=6
+  const jsDay = new Date().getDay(); // 0=Sun
+  return jsDay === 0 ? 6 : jsDay - 1; // Mon=0 … Sun=6
 }
 
-// Returns true if a habit should appear today
 function habitIsScheduledToday(h) {
-  const todayIdx = getTodayDayIndex();
-  if (h.freq === 'daily') return true;
-  if (h.freq === 'weekdays') return todayIdx <= 4; // Mon–Fri = 0–4
-  if (h.freq === 'custom') return h.customDays && h.customDays.includes(todayIdx);
+  const idx = getTodayDayIndex();
+  if (h.freq === 'daily')    return true;
+  if (h.freq === 'weekdays') return idx <= 4;
+  if (h.freq === 'custom')   return h.customDays && h.customDays.includes(idx);
   return true;
 }
 
-// ═══════════════════════════════
-// PERSISTENCE HELPERS
-// ═══════════════════════════════
-function saveHabits()  { localStorage.setItem(STORAGE_KEY, JSON.stringify(habits)); }
-function saveStreak()  { localStorage.setItem(STREAK_KEY, streak); localStorage.setItem(BEST_STREAK_KEY, bestStreak); }
-function getHistory()  { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}'); }
-function saveHistory(h){ localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); }
+// ═══════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════
+function saveHabits()   { localStorage.setItem(STORAGE_KEY, JSON.stringify(habits)); }
+function saveStreak()   { localStorage.setItem(STREAK_KEY, streak); localStorage.setItem(BEST_STREAK_KEY, bestStreak); }
+function getHistory()   { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}'); }
+function saveHistory(h) { localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); }
 
 function todayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // NAME
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 function loadName() {
   const name = localStorage.getItem(NAME_KEY) || 'Kester';
   const input = document.getElementById('name-input');
   if (input) input.value = name;
   updateGreetingName(name);
 }
-
-function updateName(val) {
-  updateGreetingName(val || 'Kester');
-}
-
+function updateName(val) { updateGreetingName(val || 'Kester'); }
 function saveName(val) {
   const name = val.trim() || 'Kester';
   localStorage.setItem(NAME_KEY, name);
@@ -703,34 +650,29 @@ function saveName(val) {
   const input = document.getElementById('name-input');
   if (input && !val.trim()) input.value = name;
 }
-
 function updateGreetingName(name) {
-  const now = new Date();
-  const h   = now.getHours();
+  const h = new Date().getHours();
   const part = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
   const greet = document.getElementById('greeting');
   if (greet) greet.textContent = `Good ${part}, ${name}`;
-  // Update avatar initial
   const av = document.getElementById('avatar-initial');
   if (av) av.textContent = (name[0] || 'K').toUpperCase();
 }
 
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // SOUND
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 function loadSound() {
   const stored = localStorage.getItem(SOUND_KEY);
   soundEnabled = stored === null ? true : stored === 'true';
   updateSoundUI();
 }
-
 function toggleSound() {
   soundEnabled = !soundEnabled;
   localStorage.setItem(SOUND_KEY, soundEnabled);
   updateSoundUI();
   if (soundEnabled) playTick();
 }
-
 function updateSoundUI() {
   const toggle = document.getElementById('sound-toggle');
   const label  = document.getElementById('sound-status-text');
@@ -739,33 +681,28 @@ function updateSoundUI() {
   if (label) label.textContent = soundEnabled ? 'Enabled' : 'Disabled';
 }
 
-// ═══════════════════════════════
-// DAILY REMINDER (Web Notifications + scheduled via setInterval check)
-// ═══════════════════════════════
+// ═══════════════════════════════════════
+// REMINDER
+// ═══════════════════════════════════════
 function loadReminder() {
   reminderEnabled = localStorage.getItem(REMINDER_KEY) === 'true';
   const time = localStorage.getItem(REMINDER_TIME_KEY) || '09:00';
-  const timeInput = document.getElementById('reminder-time');
-  if (timeInput) timeInput.value = time;
+  const ti = document.getElementById('reminder-time');
+  if (ti) ti.value = time;
   updateReminderUI();
 }
-
 function toggleReminder() {
   if (!reminderEnabled) {
-    // Request permission first
-    if (!('Notification' in window)) {
-      showToast('⚠️ Notifications not supported');
-      return;
-    }
+    if (!('Notification' in window)) { showToast('Notifications not supported'); return; }
     Notification.requestPermission().then(perm => {
       if (perm === 'granted') {
         reminderEnabled = true;
         localStorage.setItem(REMINDER_KEY, 'true');
         updateReminderUI();
         scheduleReminderCheck();
-        showToast('🔔 Reminder enabled!');
+        showToast('Reminder enabled!');
       } else {
-        showToast('⚠️ Permission denied');
+        showToast('Permission denied');
         updateReminderUI();
       }
     });
@@ -773,25 +710,21 @@ function toggleReminder() {
     reminderEnabled = false;
     localStorage.setItem(REMINDER_KEY, 'false');
     updateReminderUI();
-    showToast('🔕 Reminder disabled');
+    showToast('Reminder disabled');
   }
 }
-
 function saveReminderTime(val) {
   localStorage.setItem(REMINDER_TIME_KEY, val);
-  showToast(`⏰ Reminder set for ${formatTime12(val)}`);
+  showToast(`Reminder set for ${formatTime12(val)}`);
 }
-
 function updateReminderUI() {
   const toggle = document.getElementById('reminder-toggle');
   const label  = document.getElementById('reminder-status-text');
   const row    = document.getElementById('reminder-time-row');
   const note   = document.getElementById('reminder-note');
   if (!toggle) return;
-
   const hasPerm = 'Notification' in window && Notification.permission === 'granted';
   toggle.className = `toggle-switch ${reminderEnabled && hasPerm ? 'on' : 'off'}`;
-
   if (reminderEnabled && hasPerm) {
     const time = localStorage.getItem(REMINDER_TIME_KEY) || '09:00';
     if (label) label.textContent = `Daily at ${formatTime12(time)}`;
@@ -803,31 +736,21 @@ function updateReminderUI() {
     if (note) note.classList.toggle('hidden', !reminderEnabled);
   }
 }
-
-function formatTime12(time24) {
-  const [h, m] = time24.split(':').map(Number);
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const h12  = h % 12 || 12;
-  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+function formatTime12(t) {
+  const [h, m] = t.split(':').map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
 }
-
 function testReminder() {
   if (Notification.permission === 'granted') {
-    new Notification('Kester Habit Tracker 🔥', {
-      body: "Time to check your habits! Stay consistent.",
-      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="%23FC4C02"/><text x="18" y="24" font-size="18" text-anchor="middle" fill="black">K</text></svg>'
-    });
-  } else {
-    showToast('⚠️ Enable notifications first');
-  }
+    new Notification('Konsist Habit Tracker', { body: "Time to check your habits! Stay consistent." });
+  } else { showToast('Enable notifications first'); }
 }
-
 let reminderCheckInterval = null;
 function scheduleReminderCheck() {
   if (reminderCheckInterval) clearInterval(reminderCheckInterval);
   reminderCheckInterval = setInterval(() => {
     if (!reminderEnabled || Notification.permission !== 'granted') return;
-    const now  = new Date();
+    const now = new Date();
     const time = localStorage.getItem(REMINDER_TIME_KEY) || '09:00';
     const [th, tm] = time.split(':').map(Number);
     if (now.getHours() === th && now.getMinutes() === tm) {
@@ -835,40 +758,38 @@ function scheduleReminderCheck() {
       const todayStr  = todayKey();
       if (lastFired !== todayStr) {
         localStorage.setItem('kester_last_notif', todayStr);
-        new Notification('Kester Habit Tracker 🔥', {
-          body: "Don't break the streak! Check off today's habits.",
-        });
+        new Notification('Konsist Habit Tracker', { body: "Don't break the streak! Check off today's habits." });
       }
     }
-  }, 30000); // check every 30s
+  }, 30000);
 }
 
-// ═══════════════════════════════
-// STREAK LOGIC
-// ═══════════════════════════════
+// ═══════════════════════════════════════
+// STREAK
+// ═══════════════════════════════════════
 function updateStreakOnLoad() {
   const today    = todayKey();
   const lastDate = localStorage.getItem(LAST_DATE_KEY);
-  streak     = parseInt(localStorage.getItem(STREAK_KEY)    || '0');
+  streak     = parseInt(localStorage.getItem(STREAK_KEY)     || '0');
   bestStreak = parseInt(localStorage.getItem(BEST_STREAK_KEY) || '0');
-
   if (lastDate && lastDate !== today) {
-    const last  = new Date(lastDate);
-    const now   = new Date(today);
-    const diff  = Math.floor((now - last) / 86400000);
+    const diff = Math.floor((new Date(today) - new Date(lastDate)) / 86400000);
     if (diff > 1) { streak = 0; saveStreak(); }
   }
 }
 
+// ─────────────────────────────────────
+// FIX 1: Save { done, total } per day
+// ─────────────────────────────────────
 function recordTodayCompletion() {
-  const today      = todayKey();
+  const today       = todayKey();
   const todayHabits = habits.filter(h => habitIsScheduledToday(h));
-  const done       = todayHabits.filter(h => h.done).length;
-  const total      = todayHabits.length;
-  const allDone    = total > 0 && done === total;
+  const done        = todayHabits.filter(h => h.done).length;
+  const total       = todayHabits.length;
+  const allDone     = total > 0 && done === total;
 
   const history = getHistory();
-  history[today] = done;
+  history[today] = { done, total };   // <── was just: done
   saveHistory(history);
 
   const lastDate = localStorage.getItem(LAST_DATE_KEY);
@@ -888,28 +809,26 @@ function renderStreakUI() {
 
   const badge = document.getElementById('streak-badge');
   if (badge) {
-    if (streak >= 30) badge.textContent = 'ELITE';
+    if (streak >= 30)      badge.textContent = 'ELITE';
     else if (streak >= 14) badge.textContent = 'POWER USER';
-    else if (streak >= 7) badge.textContent = 'ON FIRE';
-    else badge.textContent = 'BUILDING';
+    else if (streak >= 7)  badge.textContent = 'ON FIRE';
+    else                   badge.textContent = 'BUILDING';
   }
-
   const rank = document.getElementById('rank-label');
   const sub  = document.getElementById('rank-sub');
   if (rank && sub) {
-    if (streak >= 30) { rank.textContent = 'ELITE ZONE'; sub.textContent = 'Top 1% this month'; }
-    else if (streak >= 14) { rank.textContent = 'POWER USER'; sub.textContent = 'Top 5% this week'; }
-    else if (streak >= 7)  { rank.textContent = 'ON A ROLL'; sub.textContent = 'Keep the fire going!'; }
-    else { rank.textContent = 'GETTING STARTED'; sub.textContent = 'Build the habit!'; }
+    if (streak >= 30)      { rank.textContent = 'ELITE ZONE';      sub.textContent = 'Top 1% this month'; }
+    else if (streak >= 14) { rank.textContent = 'POWER USER';      sub.textContent = 'Top 5% this week'; }
+    else if (streak >= 7)  { rank.textContent = 'ON A ROLL';       sub.textContent = 'Keep the fire going!'; }
+    else                   { rank.textContent = 'GETTING STARTED'; sub.textContent = 'Build the habit!'; }
   }
-
   const best = document.getElementById('stat-best-streak');
   if (best) best.textContent = bestStreak + 'd';
 }
 
-// ═══════════════════════════════
-// DATE RESET
-// ═══════════════════════════════
+// ═══════════════════════════════════════
+// DAY RESET
+// ═══════════════════════════════════════
 function checkDayReset() {
   const today    = todayKey();
   const lastDate = localStorage.getItem(LAST_DATE_KEY + '_reset');
@@ -920,40 +839,35 @@ function checkDayReset() {
   }
 }
 
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // LOAD DATA
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 function loadData() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (raw) {
     habits = JSON.parse(raw);
-    nextId = habits.reduce((m,h) => Math.max(m, h.id), 0) + 1;
+    nextId = habits.reduce((m, h) => Math.max(m, h.id), 0) + 1;
   } else {
-    habits = [];
-    nextId = 1;
+    habits = []; nextId = 1;
   }
 }
 
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // GREETING
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 function setGreeting() {
   const now  = new Date();
-  const name = localStorage.getItem(NAME_KEY) || 'Kester';
-  updateGreetingName(name);
-
+  loadName();
   const start = new Date(now.getFullYear(), 0, 0);
   const day   = Math.floor((now - start) / 86400000);
   document.getElementById('day-counter').textContent = `Day ${day} of 365`;
-
-  const dateLabel = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  const greetingDate = document.getElementById('greeting-date');
-  if (greetingDate) greetingDate.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const gd = document.getElementById('greeting-date');
+  if (gd) gd.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 }
 
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // SCREEN SWITCHING
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 function switchScreen(name) {
   ['today','stats','settings'].forEach(s => {
     document.getElementById(`screen-${s}`).classList.toggle('active', s === name);
@@ -975,101 +889,81 @@ function switchScreen(name) {
       btn.classList.add('opacity-50');
     }
   });
-  const fab = document.getElementById('fab');
-  fab.style.display = name === 'today' ? 'flex' : 'none';
-  if (name === 'stats') renderStats();
-  if (name === 'settings') {
-    loadName();
-    loadSound();
-    loadReminder();
-  }
+  document.getElementById('fab').style.display = name === 'today' ? 'flex' : 'none';
+  if (name === 'stats')    renderStats();
+  if (name === 'settings') { loadName(); loadSound(); loadReminder(); }
 }
 
-// ═══════════════════════════════
-// HABIT LIST RENDER
-// ═══════════════════════════════
+// ═══════════════════════════════════════
+// HABIT LIST
+// ═══════════════════════════════════════
 function renderHabits() {
   const list  = document.getElementById('habits-list');
   const empty = document.getElementById('empty-state');
   list.innerHTML = '';
 
-  // Filter to habits scheduled for today
   const todayHabits = habits.filter(h => habitIsScheduledToday(h));
-
-  if (habits.length === 0) {
-    empty.classList.remove('hidden');
-    updateProgress();
-    return;
-  }
+  if (habits.length === 0) { empty.classList.remove('hidden'); updateProgress(); return; }
   empty.classList.add('hidden');
 
   if (todayHabits.length === 0) {
-    // Has habits but none scheduled today
-    list.innerHTML = `
-      <div class="text-center py-8">
-        <span class="material-symbols-outlined text-4xl mb-3 block" style="color:#46465c">weekend</span>
-        <p class="font-headline font-bold text-base text-on-surface-variant">Rest day!</p>
-        <p class="text-sm text-on-surface-variant mt-1">No habits scheduled for today.</p>
-      </div>`;
-    updateProgress();
-    return;
+    list.innerHTML = `<div class="text-center py-8">
+      <span class="material-symbols-outlined text-4xl mb-3 block" style="color:#46465c">weekend</span>
+      <p class="font-headline font-bold text-base text-on-surface-variant">Rest day!</p>
+      <p class="text-sm text-on-surface-variant mt-1">No habits scheduled for today.</p></div>`;
+    updateProgress(); return;
   }
 
   todayHabits.forEach(h => {
     const freqLabel = h.freq === 'custom'
-      ? (h.customDays && h.customDays.length ? h.customDays.map(d => ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d]).join(' · ') : 'Custom')
+      ? (h.customDays && h.customDays.length
+          ? h.customDays.map(d => ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d]).join(' · ')
+          : 'Custom')
       : h.freq === 'weekdays' ? 'Weekdays' : 'Daily';
 
     const wrapper = document.createElement('div');
     wrapper.className = 'habit-wrapper';
     wrapper.id = `wrapper-${h.id}`;
     wrapper.innerHTML = `
-      <!-- Delete background -->
       <div class="habit-delete-bg" id="delbg-${h.id}">
         <span class="material-symbols-outlined filled text-2xl" style="color:#ff716c">delete</span>
       </div>
-      <!-- Habit card -->
-      <div class="habit-card flex items-center justify-between p-4 ${h.done ? 'habit-done' : ''}" id="habit-${h.id}" style="${h.done ? 'background:#17172f' : 'background:#1d1d37'}">
+      <div class="habit-card flex items-center justify-between p-4 ${h.done ? 'habit-done' : ''}"
+           id="habit-${h.id}" style="${h.done ? 'background:#17172f' : 'background:#1d1d37'}">
         <div class="flex items-center gap-4 flex-1 min-w-0">
           <div class="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0" style="background:${h.color}22">
             <span class="material-symbols-outlined text-xl" style="color:${h.color}">${h.icon}</span>
           </div>
           <div class="min-w-0">
             <span class="habit-name font-headline font-semibold text-sm text-on-surface block transition-all truncate">${h.name}</span>
-            <span class="habit-sub text-[10px] text-on-surface-variant transition-all">${h.done ? 'Complete ✓' : freqLabel}</span>
+            <span class="habit-sub text-[10px] text-on-surface-variant transition-all">${h.done ? 'Complete' : freqLabel}</span>
           </div>
         </div>
-        <button onclick="toggleHabit(${h.id}, event)" class="relative flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90 ml-3" id="check-${h.id}"
+        <button onclick="toggleHabit(${h.id}, event)"
+          class="relative flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90 ml-3"
+          id="check-${h.id}"
           style="${h.done ? `background:var(--primary);box-shadow:0 0 16px rgba(252,76,2,0.4)` : `border:2px solid var(--primary)`}">
           ${h.done ? `<span class="material-symbols-outlined filled text-sm text-black check-icon-animate">check</span>` : ''}
         </button>
-      </div>
-    `;
+      </div>`;
     list.appendChild(wrapper);
-
-    // Attach swipe-to-delete
     attachSwipe(h.id);
   });
 
   updateProgress();
 }
 
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // SWIPE TO DELETE
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 function attachSwipe(id) {
   const card = document.getElementById(`habit-${id}`);
   if (!card) return;
-
   let startX = 0, currentX = 0, isSwiping = false, swiped = false;
-
-  card.addEventListener('touchstart', (e) => {
-    startX = e.touches[0].clientX;
-    isSwiping = true;
-    swiped = card.classList.contains('swiped');
+  card.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX; isSwiping = true; swiped = card.classList.contains('swiped');
   }, { passive: true });
-
-  card.addEventListener('touchmove', (e) => {
+  card.addEventListener('touchmove', e => {
     if (!isSwiping) return;
     currentX = e.touches[0].clientX - startX;
     const dx = swiped ? currentX - 80 : currentX;
@@ -1081,28 +975,21 @@ function attachSwipe(id) {
       card.style.transform = `translateX(${Math.min(0, dx - 80)}px)`;
     }
   }, { passive: true });
-
   card.addEventListener('touchend', () => {
     if (!isSwiping) return;
     isSwiping = false;
     const dx = swiped ? currentX - 80 : currentX;
     card.style.transform = '';
-
-    if (dx < -50) {
-      // Fully swiped — show delete confirm
-      card.classList.add('swiped');
-      setTimeout(() => promptDeleteHabit(id), 100);
-    } else {
-      card.classList.remove('swiped');
-    }
+    if (dx < -50) { card.classList.add('swiped'); setTimeout(() => promptDeleteHabit(id), 100); }
+    else { card.classList.remove('swiped'); }
     const bg = document.getElementById(`delbg-${id}`);
     if (bg) bg.classList.remove('active-delete');
   });
 }
 
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // DELETE HABIT
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 function promptDeleteHabit(id) {
   pendingDeleteId = id;
   const h = habits.find(x => x.id === id);
@@ -1110,17 +997,14 @@ function promptDeleteHabit(id) {
   if (nameEl && h) nameEl.textContent = `"${h.name}" will be deleted.`;
   document.getElementById('delete-habit-overlay').classList.add('open');
 }
-
 function closeDeleteHabit() {
   document.getElementById('delete-habit-overlay').classList.remove('open');
-  // Unswipe if cancelled
   if (pendingDeleteId) {
     const card = document.getElementById(`habit-${pendingDeleteId}`);
     if (card) card.classList.remove('swiped');
     pendingDeleteId = null;
   }
 }
-
 function confirmDeleteHabit() {
   if (!pendingDeleteId) return;
   habits = habits.filter(h => h.id !== pendingDeleteId);
@@ -1128,32 +1012,30 @@ function confirmDeleteHabit() {
   pendingDeleteId = null;
   document.getElementById('delete-habit-overlay').classList.remove('open');
   renderHabits();
-  showToast('🗑️ Habit deleted');
+  showToast('Habit deleted');
 }
 
-// ═══════════════════════════════
-// PROGRESS
-// ═══════════════════════════════
+// ═══════════════════════════════════════
+// PROGRESS RING
+// ═══════════════════════════════════════
 function updateProgress() {
   const todayHabits = habits.filter(h => habitIsScheduledToday(h));
   const done  = todayHabits.filter(h => h.done).length;
   const total = todayHabits.length;
   const pct   = total ? Math.round(done / total * 100) : 0;
-
-  document.getElementById('done-count').textContent  = done;
-  document.getElementById('total-count').textContent = total;
-  document.getElementById('ring-pct').textContent    = pct + '%';
+  document.getElementById('done-count').textContent   = done;
+  document.getElementById('total-count').textContent  = total;
+  document.getElementById('ring-pct').textContent     = pct + '%';
   document.getElementById('progress-bar').style.width = pct + '%';
-
   const circ = 2 * Math.PI * 15.9;
   document.getElementById('progress-ring').setAttribute('stroke-dasharray',
     `${(pct / 100 * circ).toFixed(1)} ${circ.toFixed(1)}`);
 }
 
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // TOGGLE HABIT
-// ═══════════════════════════════
-function toggleHabit(id, e) {
+// ═══════════════════════════════════════
+function toggleHabit(id) {
   const habit = habits.find(h => h.id === id);
   if (!habit) return;
   habit.done = !habit.done;
@@ -1161,17 +1043,22 @@ function toggleHabit(id, e) {
 
   const btn = document.getElementById(`check-${id}`);
   const row = document.getElementById(`habit-${id}`);
+  const freqLabel = habit.freq === 'custom'
+    ? (habit.customDays && habit.customDays.length
+        ? habit.customDays.map(d => ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d]).join(' · ')
+        : 'Custom')
+    : habit.freq === 'weekdays' ? 'Weekdays' : 'Daily';
 
   if (habit.done) {
-    btn.style.background  = 'var(--primary)';
-    btn.style.boxShadow   = '0 0 16px rgba(252,76,2,0.4)';
-    btn.style.border      = 'none';
-    btn.innerHTML         = `<span class="material-symbols-outlined filled text-sm text-black check-icon-animate">check</span>`;
+    btn.style.background = 'var(--primary)';
+    btn.style.boxShadow  = '0 0 16px rgba(252,76,2,0.4)';
+    btn.style.border     = 'none';
+    btn.innerHTML        = `<span class="material-symbols-outlined filled text-sm text-black check-icon-animate">check</span>`;
     btn.classList.add('check-animate');
     row.classList.add('habit-done');
-    row.style.background  = '#17172f';
+    row.style.background = '#17172f';
     spawnConfetti(btn);
-    showToast(`🔥 ${habit.name} done!`);
+    showToast(`${habit.name} done!`);
     if (soundEnabled) playTick();
   } else {
     btn.style.background = '';
@@ -1182,23 +1069,18 @@ function toggleHabit(id, e) {
     row.classList.remove('habit-done');
     row.style.background = '#1d1d37';
   }
-
-  const freqLabel = habit.freq === 'custom'
-    ? (habit.customDays && habit.customDays.length ? habit.customDays.map(d => ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d]).join(' · ') : 'Custom')
-    : habit.freq === 'weekdays' ? 'Weekdays' : 'Daily';
-
   setTimeout(() => {
     const sub = row.querySelector('.habit-sub');
-    if (sub) sub.textContent = habit.done ? 'Complete ✓' : freqLabel;
+    if (sub) sub.textContent = habit.done ? 'Complete' : freqLabel;
   }, 50);
 
   updateProgress();
   recordTodayCompletion();
 }
 
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // CONFETTI
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 function spawnConfetti(btn) {
   const rect   = btn.getBoundingClientRect();
   const cx     = rect.left + rect.width / 2;
@@ -1209,15 +1091,15 @@ function spawnConfetti(btn) {
     dot.className = 'confetti-dot';
     const angle = (Math.PI * 2 / 10) * i;
     const dist  = 30 + Math.random() * 25;
-    dot.style.cssText = `left:${cx-3}px;top:${cy-3}px;background:${colors[i%5]};--cx:${Math.cos(angle)*dist}px;--cy:${Math.sin(angle)*dist}px;`;
+    dot.style.cssText = `left:${cx-3}px;top:${cy-3}px;background:${colors[i%5]};--cx:${Math.cos(angle)*dist}px;--cy:${Math.sin(angle)*dist}px`;
     document.body.appendChild(dot);
     setTimeout(() => dot.remove(), 550);
   }
 }
 
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // SOUND
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 function playTick() {
   try {
     const ctx  = new (window.AudioContext || window.webkitAudioContext)();
@@ -1232,9 +1114,9 @@ function playTick() {
   } catch(_) {}
 }
 
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // TOAST
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 let toastTimer;
 function showToast(msg) {
   const t = document.getElementById('toast');
@@ -1244,9 +1126,9 @@ function showToast(msg) {
   toastTimer = setTimeout(() => { t.style.opacity = '0'; }, 2200);
 }
 
-// ═══════════════════════════════
-// STATS RENDER
-// ═══════════════════════════════
+// ═══════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════
 function renderStats() {
   renderStreakUI();
 
@@ -1258,6 +1140,7 @@ function renderStats() {
   document.getElementById('stat-total').textContent = habits.length;
   document.getElementById('stat-pct').textContent   = pct + '%';
 
+  // Week range label
   const now = new Date();
   const dow = now.getDay();
   const mon = new Date(now); mon.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
@@ -1265,29 +1148,113 @@ function renderStats() {
   const fmt = d => d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
   document.getElementById('week-range').textContent = `${fmt(mon)} – ${fmt(sun)}`;
 
-  const history = getHistory();
-  const todayIdx = getTodayDayIndex(); // Mon=0
-  const barsEl = document.getElementById('week-bars');
-  barsEl.innerHTML = '';
+  const history     = getHistory();
+  const todayDayIdx = getTodayDayIndex();
 
+  // ─────────────────────────────────────────────────────────
+  // LINE CHART: Read { done, total } from history.
+  // ─────────────────────────────────────────────────────────
+  const chartW = 300, chartH = 96;
+  const padL = 0, padR = 0, padT = 10, padB = 6;
+  const innerW = chartW - padL - padR;
+  const innerH = chartH - padT - padB;
+
+  const dayData = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(mon); d.setDate(mon.getDate() + i);
     const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    const dayDone  = history[key] || 0;
-    const dayTotal = habits.length || 1;
-    const pctDay   = Math.round(dayDone / dayTotal * 100);
-    const isToday  = i === todayIdx;
-    const isHigh   = pctDay >= 90;
-    const color    = pctDay > 0 ? (isHigh ? 'var(--primary)' : '#46465c') : '#1d1d37';
+    const entry    = history[key];
+    const isFuture = i > todayDayIdx;
+    const isToday  = i === todayDayIdx;
 
-    barsEl.innerHTML += `
-      <div class="flex-1 flex flex-col items-center gap-2 bar-group" style="position:relative">
-        ${isHigh ? `<div class="bar-tip text-[9px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded" style="background:#1d1d37;color:var(--primary);opacity:0;position:absolute;top:-24px;left:50%;transform:translateX(-50%);transition:opacity 0.2s;pointer-events:none">MAX</div>` : ''}
-        <div class="w-full rounded-t-sm stat-bar" style="height:${Math.max(pctDay,5)}%;background:${color};animation-delay:${i*0.06}s"></div>
-        <span class="text-[10px] font-bold" style="color:${isToday ? 'var(--primary)' : '#74738b'}">${WEEK_DAYS[i]}</span>
-      </div>`;
+    let dayDone = 0, dayTotal = 0, pctDay = 0, hasData = false;
+    if (entry !== undefined && entry !== null) {
+      hasData = true;
+      if (typeof entry === 'object') { dayDone = entry.done || 0; dayTotal = entry.total || 0; }
+      else { dayDone = entry; dayTotal = habits.length || 1; }
+      pctDay = dayTotal > 0 ? Math.round(dayDone / dayTotal * 100) : 0;
+    }
+    dayData.push({ i, isFuture, isToday, hasData, dayDone, dayTotal, pctDay });
   }
 
+  // Map index → SVG x coordinate (edge-to-edge like reference)
+  const xOf = i => padL + (i / 6) * innerW;
+  // Map pct → SVG y coordinate (inverted: 100% at top, leave padT headroom)
+  const yOf = pct => padT + (1 - pct / 100) * innerH;
+
+  // Only connect days that have data and aren't future
+  const solidDays = dayData.filter(d => d.hasData && !d.isFuture);
+
+  // Build line path
+  const lineD = solidDays.length > 1
+    ? 'M' + solidDays.map(d => `${xOf(d.i)},${yOf(d.pctDay)}`).join(' L')
+    : '';
+
+  // Area fill path (close to bottom)
+  let areaPath = '';
+  if (solidDays.length >= 1) {
+    const first = solidDays[0], last = solidDays[solidDays.length - 1];
+    areaPath = `M${xOf(first.i)},${yOf(first.pctDay)} ` +
+      solidDays.slice(1).map(d => `L${xOf(d.i)},${yOf(d.pctDay)}`).join(' ') +
+      ` L${xOf(last.i)},${chartH} L${xOf(first.i)},${chartH} Z`;
+  }
+
+  // Dots — reference style: dark-fill circle with orange stroke, pulsing ring for today
+  let dotsHTML = '';
+  dayData.forEach(d => {
+    const x = xOf(d.i);
+    if (d.isFuture || !d.hasData) return;
+    const y = yOf(d.pctDay);
+    const tipText = `${d.dayDone}/${d.dayTotal} · ${d.pctDay}%`;
+
+    if (d.isToday) {
+      // Pulsing outer ring + white inner dot (reference style for current day)
+      dotsHTML += `
+        <circle cx="${x}" cy="${y}" r="8" fill="#FC4C02" opacity="0.15" class="animate-pulse"/>
+        <circle cx="${x}" cy="${y}" r="4.5" fill="#111127" stroke="#FC4C02" stroke-width="1.5"/>
+        <circle cx="${x}" cy="${y}" r="2.5" fill="white"/>
+        <title>${tipText}</title>`;
+    } else {
+      // Regular dot: dark fill, orange stroke (reference style)
+      dotsHTML += `
+        <circle cx="${x}" cy="${y}" r="3" fill="#111127" stroke="#FC4C02" stroke-width="1.5">
+          <title>${tipText}</title>
+        </circle>`;
+    }
+  });
+
+  const svg = document.getElementById('week-line-chart');
+  svg.setAttribute('viewBox', `0 0 ${chartW} ${chartH}`);
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="lineAreaGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#FC4C02" stop-opacity="0.30"/>
+        <stop offset="100%" stop-color="#FC4C02" stop-opacity="0"/>
+      </linearGradient>
+      <filter id="lineGlow">
+        <feGaussianBlur stdDeviation="2" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    ${areaPath ? `<path d="${areaPath}" fill="url(#lineAreaGrad)"/>` : ''}
+    ${lineD ? `<path d="${lineD}" fill="none" stroke="#FC4C02" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#lineGlow)"/>` : ''}
+    ${dotsHTML}
+  `;
+
+  // Day labels — match reference: orange for today, dimmed for future
+  const labelsEl = document.getElementById('week-day-labels');
+  labelsEl.innerHTML = '';
+  dayData.forEach(d => {
+    const span = document.createElement('span');
+    span.className = 'font-bold text-center flex-1';
+    span.style.fontSize = '10px';
+    span.style.color = d.isToday ? '#FC4C02' : d.isFuture ? '#2a2a44' : '#74738b';
+    if (d.isToday) span.style.transform = 'scale(1.2)';
+    span.textContent = WEEK_DAYS[d.i];
+    labelsEl.appendChild(span);
+  });
+
+  // Per-habit breakdown
   const breakEl = document.getElementById('breakdown-list');
   if (habits.length === 0) {
     breakEl.innerHTML = `<p class="text-sm text-on-surface-variant text-center py-4">No habits added yet.</p>`;
@@ -1303,7 +1270,7 @@ function renderStats() {
             <span class="material-symbols-outlined text-base" style="color:${h.color}">${h.icon}</span>
             <span class="font-bold text-sm">${h.name}</span>
           </div>
-          <span class="font-headline font-bold text-sm" style="color:${h.color}">${h.done ? 'Done ✓' : 'Pending'}</span>
+          <span class="font-headline font-bold text-sm" style="color:${h.color}">${h.done ? 'Done' : 'Pending'}</span>
         </div>
         <div class="h-1.5 w-full rounded-full overflow-hidden" style="background:#111127">
           <div class="h-full rounded-full stat-bar" style="background:${h.color};width:${pctH}%;animation-delay:${i*0.1}s"></div>
@@ -1312,9 +1279,9 @@ function renderStats() {
   });
 }
 
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // MODAL
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 function openModal() {
   document.getElementById('modal-overlay').classList.add('open');
   setTimeout(() => document.getElementById('habit-name-input').focus(), 350);
@@ -1323,8 +1290,7 @@ function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
   document.getElementById('habit-name-input').value = '';
   document.getElementById('habit-name-input').style.outline = '';
-  selectedFreq = 'daily';
-  selectedCustomDays = [];
+  selectedFreq = 'daily'; selectedCustomDays = [];
   document.getElementById('custom-day-picker').classList.add('hidden');
   document.querySelectorAll('.freq-btn').forEach((b, i) => {
     const active = i === 0;
@@ -1345,20 +1311,19 @@ function buildIconGrid() {
     btn.className = 'aspect-square flex items-center justify-center rounded-xl transition-all active:scale-90';
     btn.style.background = icon === selectedIcon ? `${selectedColor}22` : '#111127';
     btn.style.border     = icon === selectedIcon ? `1px solid ${selectedColor}66` : '1px solid transparent';
-    btn.innerHTML        = `<span class="material-symbols-outlined text-xl" style="color:${icon === selectedIcon ? selectedColor : '#74738b'}">${icon}</span>`;
+    btn.innerHTML = `<span class="material-symbols-outlined text-xl" style="color:${icon === selectedIcon ? selectedColor : '#74738b'}">${icon}</span>`;
     btn.onclick = () => { selectedIcon = icon; buildIconGrid(); };
     grid.appendChild(btn);
   });
 }
-
 function buildColorGrid() {
   const grid = document.getElementById('color-grid');
   grid.innerHTML = '';
   COLORS.forEach(color => {
     const btn = document.createElement('button');
     btn.className = 'w-8 h-8 rounded-full transition-all active:scale-90';
-    btn.style.background   = color;
-    btn.style.outline      = color === selectedColor ? `2px solid ${color}` : 'none';
+    btn.style.background    = color;
+    btn.style.outline       = color === selectedColor ? `2px solid ${color}` : 'none';
     btn.style.outlineOffset = '3px';
     btn.onclick = () => { selectedColor = color; buildColorGrid(); buildIconGrid(); };
     grid.appendChild(btn);
@@ -1377,57 +1342,37 @@ function selectFreq(btn) {
     b.classList.toggle('text-on-surface-variant', !active);
   });
   const picker = document.getElementById('custom-day-picker');
-  if (selectedFreq === 'custom') {
-    picker.classList.remove('hidden');
-    buildDayPicker();
-  } else {
-    picker.classList.add('hidden');
-  }
-  if (selectedFreq === 'weekdays') {
-    selectedCustomDays = [0,1,2,3,4];
-  } else if (selectedFreq === 'daily') {
-    selectedCustomDays = [0,1,2,3,4,5,6];
-  }
+  if (selectedFreq === 'custom') { picker.classList.remove('hidden'); buildDayPicker(); }
+  else { picker.classList.add('hidden'); }
+  if (selectedFreq === 'weekdays') selectedCustomDays = [0,1,2,3,4];
+  else if (selectedFreq === 'daily') selectedCustomDays = [0,1,2,3,4,5,6];
 }
-
 function buildDayPicker() {
   const row = document.getElementById('day-picker-row');
   row.innerHTML = '';
   DAY_LABELS.forEach((label, i) => {
-    const btn = document.createElement('button');
+    const btn    = document.createElement('button');
     const active = selectedCustomDays.includes(i);
     btn.className = 'flex-1 flex flex-col items-center gap-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-90';
-    btn.style.background  = active ? 'var(--primary)' : '#111127';
-    btn.style.color       = active ? '#000' : '#74738b';
-    btn.style.border      = active ? 'none' : '1px solid #46465c';
+    btn.style.background = active ? 'var(--primary)' : '#111127';
+    btn.style.color      = active ? '#000' : '#74738b';
+    btn.style.border     = active ? 'none' : '1px solid #46465c';
     btn.innerHTML = `<span>${label}</span>`;
     btn.onclick = () => {
-      if (selectedCustomDays.includes(i)) {
-        selectedCustomDays = selectedCustomDays.filter(d => d !== i);
-      } else {
-        selectedCustomDays = [...selectedCustomDays, i].sort();
-      }
-      buildDayPicker();
-      updateCustomDaysSummary();
+      if (selectedCustomDays.includes(i)) selectedCustomDays = selectedCustomDays.filter(d => d !== i);
+      else selectedCustomDays = [...selectedCustomDays, i].sort();
+      buildDayPicker(); updateCustomDaysSummary();
     };
     row.appendChild(btn);
   });
   updateCustomDaysSummary();
 }
-
 function updateCustomDaysSummary() {
   const el = document.getElementById('custom-days-summary');
   if (!el) return;
-  if (selectedCustomDays.length === 0) {
-    el.textContent = 'No days selected';
-    el.style.color = '#ff716c';
-  } else if (selectedCustomDays.length === 7) {
-    el.textContent = 'Every day';
-    el.style.color = '#74738b';
-  } else {
-    el.textContent = selectedCustomDays.map(d => DAY_NAMES[d]).join(' · ');
-    el.style.color = '#74738b';
-  }
+  if (selectedCustomDays.length === 0)      { el.textContent = 'No days selected'; el.style.color = '#ff716c'; }
+  else if (selectedCustomDays.length === 7) { el.textContent = 'Every day';        el.style.color = '#74738b'; }
+  else { el.textContent = selectedCustomDays.map(d => DAY_NAMES[d]).join(' · ');   el.style.color = '#74738b'; }
 }
 
 function addHabit() {
@@ -1438,52 +1383,40 @@ function addHabit() {
     return;
   }
   if (selectedFreq === 'custom' && selectedCustomDays.length === 0) {
-    const summary = document.getElementById('custom-days-summary');
-    if (summary) { summary.style.color = '#ff716c'; summary.textContent = 'Pick at least one day!'; }
+    const s = document.getElementById('custom-days-summary');
+    if (s) { s.style.color = '#ff716c'; s.textContent = 'Pick at least one day!'; }
     setTimeout(() => updateCustomDaysSummary(), 1500);
     return;
   }
-  const customDays = selectedFreq === 'custom' ? [...selectedCustomDays]
-                   : selectedFreq === 'weekdays' ? [0,1,2,3,4]
+  const customDays = selectedFreq === 'custom'    ? [...selectedCustomDays]
+                   : selectedFreq === 'weekdays'  ? [0,1,2,3,4]
                    : [0,1,2,3,4,5,6];
   habits.push({ id: nextId++, name, icon: selectedIcon, color: selectedColor, done: false, freq: selectedFreq, customDays });
   saveHabits();
   closeModal();
   renderHabits();
-  showToast(`✅ "${name}" added!`);
+  showToast(`"${name}" added!`);
 }
 
-// ═══════════════════════════════
-// CONFIRM RESET DIALOG
-// ═══════════════════════════════
-function confirmReset() {
-  document.getElementById('confirm-overlay').classList.add('open');
-}
-function closeConfirm() {
-  document.getElementById('confirm-overlay').classList.remove('open');
-}
+// ═══════════════════════════════════════
+// RESET DIALOG
+// ═══════════════════════════════════════
+function confirmReset() { document.getElementById('confirm-overlay').classList.add('open'); }
+function closeConfirm() { document.getElementById('confirm-overlay').classList.remove('open'); }
 function resetAllData() {
   [STORAGE_KEY, STREAK_KEY, BEST_STREAK_KEY, LAST_DATE_KEY,
    LAST_DATE_KEY + '_reset', HISTORY_KEY].forEach(k => localStorage.removeItem(k));
-
-  habits      = [];
-  streak      = 0;
-  bestStreak  = 0;
-  nextId      = 1;
-  selectedIcon  = ICONS[0];
-  selectedColor = COLORS[0];
-  selectedFreq  = 'daily';
-
+  habits = []; streak = 0; bestStreak = 0; nextId = 1;
+  selectedIcon = ICONS[0]; selectedColor = COLORS[0]; selectedFreq = 'daily';
   closeConfirm();
-  renderHabits();
-  renderStreakUI();
+  renderHabits(); renderStreakUI();
   switchScreen('today');
-  showToast('🗑️ All data cleared.');
+  showToast('All data cleared.');
 }
 
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // INIT
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 (function init() {
   loadData();
   checkDayReset();
